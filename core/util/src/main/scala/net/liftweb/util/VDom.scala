@@ -38,12 +38,19 @@ object VDom {
     val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
     val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
 
-    val (added, matched) = bChildren.zipWithIndex
+    val (added, addMatched) = bChildren.zipWithIndex
       .partition { case (bc, i) => aChildren.find(ac => compare(ac, bc) > 0f).isEmpty }
 
     val additions = added.map { case (bc, i) => VNodeInsert(i, VNode.fromXml(bc)) }
 
-    val patches = additions
+    val (removed, remMatched) = aChildren.zipWithIndex
+      .partition { case (ac, i) => bChildren.find(bc => compare(bc, ac) > 0f).isEmpty }
+
+    val removals = removed.map { case (ac, i) => VNodeDelete(i) }
+
+    val patches = additions ++ removals
+
+    val matched = addMatched ++ remMatched
 
     val children = aChildren.zip(matched.map(_._1))
       .collect {

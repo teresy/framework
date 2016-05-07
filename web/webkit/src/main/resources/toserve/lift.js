@@ -402,6 +402,7 @@
         var tf = tree.patches[i];
         switch (tf.type) {
           case "insert": insertNode(node, tf.position, tf.node); break;
+          case "delete": deleteNode(node, tf.position); break;
         }
       }
       var j=0;
@@ -421,8 +422,16 @@
     }
 
     function insertNode(parent, position, vnode) {
-      // TODO: insertBefore() if not at the end
-      parent.appendChild(createElement(vnode));
+      if(position < parent.children.length) {
+        parent.insertBefore(createElement(vnode), parent.children[position]);
+      }
+      else {
+        parent.appendChild(createElement(vnode));
+      }
+    }
+
+    function deleteNode(parent, position) {
+      parent.removeChild(parent.children[position]);
     }
 
     ////////////////////////////////////////////////
