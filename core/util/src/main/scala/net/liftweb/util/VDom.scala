@@ -70,7 +70,7 @@ object VDom {
     val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
     val removals  = matrix.notInB.map { i => VNodeDelete(i) }
 
-    val patches = additions ++ removals
+    val patches = removals ++ additions
 
     val children = matrix.matches.collect {
       case (ai, (bi, score)) if score < 1.0f => diff(aChildren(ai), bChildren(bi))

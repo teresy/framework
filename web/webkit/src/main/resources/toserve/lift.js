@@ -415,6 +415,9 @@
 
     function createElement(vnode) {
       var e = vnode.tag === "#text" ? document.createTextNode(vnode.text) : document.createElement(vnode.tag);
+      for(var key in vnode.attributes) {
+        e.setAttribute(key, vnode.attributes[key]);
+      }
       for(var i = 0; i < vnode.children.length; i++) {
         e.appendChild(createElement(vnode.children[i]));
       }

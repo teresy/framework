@@ -177,7 +177,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }//.pendingUntilFixed
+    }
 
     "remove an element" in {
       val before =
@@ -202,7 +202,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }//.pendingUntilFixed("Not doing removes yet")
+    }
 
     "add an element and remove an element" in {
       val before =
@@ -228,7 +228,30 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }.pendingUntilFixed
+    }
+
+    "insert an element with attributes" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <ul>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <ul>
+              <li>Message 2</li>
+              <li class="chat-message clearable">Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
   }
 
 }

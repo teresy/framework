@@ -105,6 +105,36 @@ object VDomDiffSpec extends Specification {
       diff(before, after) must_== expected
     }
 
+    "find an element replaced by specifying a delete then an insert" in {
+      val before =
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 1</li>
+            <li>Message 2</li>
+          </ul>
+        </div>
+
+      val after =
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 1</li>
+            <li>Message 3</li>
+          </ul>
+        </div>
+
+      val expected =
+        node(
+          node(),
+          node(
+            node()
+          ).withPatches(VNodeDelete(1), VNodeInsert(1, VNode("li", Map(), List(txt("Message 3")))))
+        )
+
+      diff(before, after) must_== expected
+    }
+
     "find reordered elements" in {
       val before =
         <div>
