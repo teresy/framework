@@ -34,18 +34,43 @@ object VDom {
     override val typeHintFieldName = "type"
   }
 
+  private [this] case class DiffMatrix(matches:List[(Node, Node, Float)], notInA: List[Node], notInB: List[Node])
+  private [this] def diffMatrix(aChildren:List[Node], bChildren:List[Node]):DiffMatrix = {
+    val compares = for {
+      a <- aChildren
+      b <- bChildren
+    } yield (compare(a, b), a, b)
+    val sortedCompares = compares.sortBy(_._1)
+    val aWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Node, (Node, Float)]) {
+      case (acc, (score, a, b)) => acc + (a -> (b, score))
+    }
+    val bWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Node, (Node, Float)]) {
+      case (acc, (score, a, b)) => acc + (b -> (a, score))
+    }
+
+    val matches = aWithMatchAndScore.collect {
+      case (a, (b, score)) if score > 0.0f => (a, b, score)
+    }.toList
+    val notInA = bWithMatchAndScore.collect {
+      case (b, (a, score)) if score <= 0.0f => b
+    }.toList
+    val notInB = aWithMatchAndScore.collect {
+      case (a, (b, score)) if score <= 0.0f => a
+    }.toList
+
+    DiffMatrix(matches, notInA, notInB)
+  }
+
   def diff(a:Node, b:Node):VNodePatchTree = {
     val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
     val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
 
     val (added, addMatched) = bChildren.zipWithIndex
       .partition { case (bc, i) => aChildren.find(ac => compare(ac, bc) > 0f).isEmpty }
-
-    val additions = added.map { case (bc, i) => VNodeInsert(i, VNode.fromXml(bc)) }
-
     val (removed, remMatched) = aChildren.zipWithIndex
       .partition { case (ac, i) => bChildren.find(bc => compare(bc, ac) > 0f).isEmpty }
 
+    val additions = added.map { case (bc, i) => VNodeInsert(i, VNode.fromXml(bc)) }
     val removals = removed.map { case (ac, i) => VNodeDelete(i) }
 
     val patches = additions ++ removals
@@ -77,10 +102,10 @@ object VDom {
     else { // Compare children
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
-      val sum = aChildren.zip(bChildren).map { case (ac, bc) => compare(ac, bc) }.reduceOption(_ + _)
+      val matrix = diffMatrix(aChildren, bChildren)
+      val sum = matrix.matches.foldLeft(0.0f){ case (acc, (_, _, score)) => acc + score }
       val length = Math.max(aChildren.length, bChildren.length)
-      sum.map(_ / length)
-        .getOrElse(if(length == 0) 1f else 0f) // If there isn't a sum, we're only similar if neither have children
+      if(length > 0) sum / length else 1.0f
     }
 
   object VNode {

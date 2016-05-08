@@ -61,7 +61,7 @@ object VDomCompareSpec extends Specification {
       compare(a, b) must_== 0.5f
     }
 
-    "regard elements with the same tags but different number children as a ratio of similar children counting absentees as dissimilar" in {
+    "regard elements with the same tags but different number children as a ratio of similar children counting trailing absentees as dissimilar" in {
       val a =
         <ul>
           <li>One</li>
@@ -69,6 +69,20 @@ object VDomCompareSpec extends Specification {
       val b =
         <ul>
           <li>One</li>
+          <li>Two</li>
+        </ul>
+
+      compare(a, b) must_== 0.5f
+    }
+
+    "regard elements with the same tags but different number children as a ratio of similar children counting leading absentees as dissimilar" in {
+      val a =
+        <ul>
+          <li>One</li>
+          <li>Two</li>
+        </ul>
+      val b =
+        <ul>
           <li>Two</li>
         </ul>
 
