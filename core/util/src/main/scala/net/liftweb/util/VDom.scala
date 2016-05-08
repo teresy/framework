@@ -152,19 +152,19 @@ object VDom {
 
     def withoutWhitespace(n:Node) = recFilter(n, isntWhitespace)
 
-    def insertNode(root:Node, newChild:Node, atIndex:Int, after:Boolean):Node = {
-      def rec(parent:Elem, siblingsBefore:List[Node], child:Node, siblingsAfter:List[Node], index:Int):(Node, Int) =
+    private [this] def traverseUpdate(root:Node, atIndex:Int, siblingsAfterFound:(Node, List[Node]) => List[Node]):Node = {
+      def rec(parent: Elem, siblingsBefore: List[Node], child: Node, siblingsAfter: List[Node], index: Int): (Node, Int) =
         (parent, child, child.nonEmptyChildren.filter(isntWhitespace).toList, siblingsAfter) match {
           // We found our node by index, so insert
-          case (Elem(prefix, label, attributes, scope, _ @ _*), _, _, _) if index == atIndex =>
-            (Elem(prefix, label, attributes, scope, true, siblingsBefore ++ (child :: newChild :: siblingsAfter):_*), -1)
+          case (Elem(prefix, label, attributes, scope, _@_*), _, _, _) if index == atIndex =>
+            (Elem(prefix, label, attributes, scope, true, siblingsBefore ++ siblingsAfterFound(child, siblingsAfter): _*), -1)
 
           // Child itself has children
-          case (Elem(prefix, label, attributes, scope, _ @ _*), e:Elem, first :: rest, _) =>
+          case (Elem(prefix, label, attributes, scope, _@_*), e: Elem, first :: rest, _) =>
             val (updatedChild, updatedIndex) = rec(e, Nil, first, rest, index + 1)
-            if(updatedIndex < 0) (Elem(prefix, label, attributes, scope, true, siblingsBefore ++ (updatedChild :: siblingsAfter):_*), -1)
-            else if(updatedIndex == atIndex) (Elem(prefix, label, attributes, scope, true, siblingsBefore ++ (child :: newChild :: siblingsAfter):_*), -1)
+            if (updatedIndex < 0) (Elem(prefix, label, attributes, scope, true, siblingsBefore ++ (updatedChild :: siblingsAfter): _*), -1)
             else siblingsAfter match {
+              case next :: rest if updatedIndex == atIndex => (Elem(prefix, label, attributes, scope, true, siblingsBefore ++ (child :: siblingsAfterFound(next, rest)): _*), -1)
               case next :: rest => rec(parent, siblingsBefore :+ child, next, rest, updatedIndex)
               case Nil => (parent, updatedIndex)
             }
@@ -178,9 +178,19 @@ object VDom {
         }
 
       (root, root.nonEmptyChildren.filter(isntWhitespace).toList) match {
-        case (e:Elem, first :: rest) => rec(e, Nil, first, rest, 1)._1
+        case (e: Elem, first :: rest) => rec(e, Nil, first, rest, 1)._1
         case _ => root
       }
+    }
+
+    def insertNode(root:Node, newChild:Node, atIndex:Int, after:Boolean):Node = {
+      def siblingsAfterFound(child:Node, siblingsAfter:List[Node]):List[Node] = child :: newChild :: siblingsAfter
+      traverseUpdate(root, atIndex, siblingsAfterFound)
+    }
+
+    def removeNode(root:Node, atIndex:Int):Node = {
+      def siblingsAfterFound(child:Node, siblingsAfter:List[Node]):List[Node] = siblingsAfter
+      traverseUpdate(root, atIndex, siblingsAfterFound)
     }
   }
 

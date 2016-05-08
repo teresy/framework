@@ -5,8 +5,14 @@ import VDom.VDomHelpers._
 import org.specs2.matcher.XmlMatchers
 import org.specs2.mutable.Specification
 
+import scala.xml.Node
+
 object VDomHelpersSpec extends Specification with XmlMatchers {
   "VDomHelpers Specification".title
+
+  def nodesMust_==(a:Node, b:Node) = {
+    withoutWhitespace(a) must_== withoutWhitespace(b)
+  }
 
   "VDomHelpers.nodeCount" should {
     "count the number of nodes in an XML tree" in {
@@ -31,7 +37,7 @@ object VDomHelpersSpec extends Specification with XmlMatchers {
       val toAdd = <span>text</span>
       val after = <div><span></span>{toAdd}</div>
 
-      insertNode(before, toAdd, 1, true) must beEqualToIgnoringSpace(after)
+      nodesMust_==(insertNode(before, toAdd, 1, true), after)
     }
 
     "insert a node after the second child" in {
@@ -39,10 +45,10 @@ object VDomHelpersSpec extends Specification with XmlMatchers {
       val toAdd = <span>text</span>
       val after = <div><span></span><div></div>{toAdd}</div>
 
-      insertNode(before, toAdd, 2, true) must beEqualToIgnoringSpace(after)
+      nodesMust_==(insertNode(before, toAdd, 2, true), after)
     }
 
-    "insert a grandchild node after another" in {
+    "insert a grandchild node after the first" in {
       val before = <div>
         <ul>
           <li>msg 1</li>
@@ -62,7 +68,103 @@ object VDomHelpersSpec extends Specification with XmlMatchers {
         </ul>
       </div>
 
-      insertNode(before, toAdd, 4, true) must beEqualToIgnoringSpace(after)
+      nodesMust_==(insertNode(before, toAdd, 2, true), after)
+    }
+
+    "insert a grandchild node after the second" in {
+      val before = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      val toAdd = <li>msg 4</li>
+
+      val after = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          {toAdd}
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      nodesMust_==(insertNode(before, toAdd, 4, true), after)
+    }
+  }
+
+  "VDomHelpers.removeNode" should {
+    "remove the first child node" in {
+      val before = <div><span></span></div>
+      val after = <div></div>
+
+      nodesMust_==(removeNode(before, 1), after)
+    }
+
+    "remove a second child" in {
+      val before = <div><span></span><div></div></div>
+      val after = <div><span></span></div>
+
+      nodesMust_==(removeNode(before, 2), after)
+    }
+
+    "remove the first grandchild node" in {
+      val before = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      val after = <div>
+        <ul>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      nodesMust_==(removeNode(before, 2), after)
+    }
+
+    "remove the second grandchild node" in {
+      val before = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      val after = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      nodesMust_==(removeNode(before, 4), after)
+    }
+
+    "remove the last grandchild node" in {
+      val before = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      val after = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+        </ul>
+      </div>
+
+      nodesMust_==(removeNode(before, 6), after)
     }
   }
 
@@ -78,7 +180,7 @@ object VDomHelpersSpec extends Specification with XmlMatchers {
 
       val after = <div><ul><li>msg 1</li><li>msg 2</li><li>msg 3</li></ul></div>
 
-      recFilter(before, isntWhitespace) must_== after
+      nodesMust_==(recFilter(before, isntWhitespace), after)
     }
   }
 
