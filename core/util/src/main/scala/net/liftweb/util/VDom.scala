@@ -73,7 +73,7 @@ object VDom {
     val patches = removals ++ additions
 
     val children = matrix.matches.collect {
-      case (ai, (bi, score)) if score < 1.0f => diff(aChildren(ai), bChildren(bi))
+      case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
       case _ => VNodePatchTree(List(), List())  // No changes for this node, make a placeholder
     }.toList
 
