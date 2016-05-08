@@ -11,7 +11,19 @@ import scala.xml.Node
 object VDomGen {
   import org.scalacheck.Gen._
 
-  def genMutation(n:Node) = for {
+  def genMutation(n:Node, removable:List[Int]) = for {
+    mutation <- oneOf(genRemove(n, removable), genInsert(n))
+  } yield {
+    mutation
+  }
+
+  def genRemove(n:Node, removable:List[Int]) = for {
+    index <- oneOf(removable)
+  } yield {
+    removeNode(n, index)
+  }
+
+  def genInsert(n:Node) = for {
     index <- choose(1, nodeCount(n) - 1)
     newSibling <- genNode
   } yield {
@@ -31,9 +43,9 @@ object UpdateDOMProperties extends Properties("UpdateDOM") {
         <span>Say something!</span>
         <form method="post" data-lift="form.ajax">
           <div data-lift="Chat.submit">
-          <input type="text" id="chat-in" name="in"/>
+            <input type="text" id="chat-in" name="in"/>
             <input type="submit" value="Submit"/>
-            </div>
+          </div>
         </form>
         <div>
           <ul data-lift="Chat.messages">
@@ -46,7 +58,7 @@ object UpdateDOMProperties extends Properties("UpdateDOM") {
     </body>,
     isntWhitespace)
 
-  property("UpdateDOM should handle an arbitrary mutation of our static template") = forAll(VDomGen.genMutation(template)) { after =>
+  property("UpdateDOM should handle an arbitrary mutation of our static template") = forAll(VDomGen.genMutation(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16))) { after =>
     UpdateDOMSpec.roundTrip(template, after) == after
   }
 }
