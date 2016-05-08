@@ -34,23 +34,23 @@ object VDom {
     override val typeHintFieldName = "type"
   }
 
-  private [this] case class DiffMatrix(matches:List[(Node, Node, Float)], notInA: List[Node], notInB: List[Node])
-  private [this] def diffMatrix(aChildren:List[Node], bChildren:List[Node]):DiffMatrix = {
+  private [util] case class DiffMatrix(matches:Map[Int, (Int, Float)], notInA: List[Int], notInB: List[Int])
+  private [util] def diffMatrix(aChildren:List[Node], bChildren:List[Node]):DiffMatrix = {
     val compares = for {
-      a <- aChildren
-      b <- bChildren
-    } yield (compare(a, b), a, b)
+      (a, i) <- aChildren.zipWithIndex
+      (b, j) <- bChildren.zipWithIndex
+    } yield (compare(a, b), i, j)
     val sortedCompares = compares.sortBy(_._1)
-    val aWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Node, (Node, Float)]) {
+    val aWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Int, (Int, Float)]) {
       case (acc, (score, a, b)) => acc + (a -> (b, score))
     }
-    val bWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Node, (Node, Float)]) {
+    val bWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Int, (Int, Float)]) {
       case (acc, (score, a, b)) => acc + (b -> (a, score))
     }
 
     val matches = aWithMatchAndScore.collect {
-      case (a, (b, score)) if score > 0.0f => (a, b, score)
-    }.toList
+      case (a, (b, score)) if score > 0.0f => a -> (b, score)
+    }
     val notInA = bWithMatchAndScore.collect {
       case (b, (a, score)) if score <= 0.0f => b
     }.toList
@@ -65,23 +65,17 @@ object VDom {
     val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
     val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
 
-    val (added, addMatched) = bChildren.zipWithIndex
-      .partition { case (bc, i) => aChildren.find(ac => compare(ac, bc) > 0f).isEmpty }
-    val (removed, remMatched) = aChildren.zipWithIndex
-      .partition { case (ac, i) => bChildren.find(bc => compare(bc, ac) > 0f).isEmpty }
+    val matrix = diffMatrix(aChildren, bChildren)
 
-    val additions = added.map { case (bc, i) => VNodeInsert(i, VNode.fromXml(bc)) }
-    val removals = removed.map { case (ac, i) => VNodeDelete(i) }
+    val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
+    val removals  = matrix.notInB.map { i => VNodeDelete(i) }
 
     val patches = additions ++ removals
 
-    val matched = addMatched ++ remMatched
-
-    val children = aChildren.zip(matched.map(_._1))
-      .collect {
-        case (ca, cb) if ca != cb => diff(ca, cb)     // This != check probably would benefit from memoizing
-        case _ => VNodePatchTree(List(), List())  // No changes for this node, make a placeholder
-      }
+    val children = matrix.matches.collect {
+      case (ai, (bi, score)) if score < 1.0f => diff(aChildren(ai), bChildren(bi))
+      case _ => VNodePatchTree(List(), List())  // No changes for this node, make a placeholder
+    }.toList
 
     VNodePatchTree(patches, children)
   }
@@ -103,7 +97,7 @@ object VDom {
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
       val matrix = diffMatrix(aChildren, bChildren)
-      val sum = matrix.matches.foldLeft(0.0f){ case (acc, (_, _, score)) => acc + score }
+      val sum = matrix.matches.foldLeft(0.0f){ case (acc, (_, (_, score))) => acc + score }
       val length = Math.max(aChildren.length, bChildren.length)
       if(length > 0) sum / length else 1.0f
     }

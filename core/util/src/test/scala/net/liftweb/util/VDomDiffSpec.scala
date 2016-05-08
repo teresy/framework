@@ -103,7 +103,7 @@ object VDomDiffSpec extends Specification {
         )
 
       diff(before, after) must_== expected
-    }.pendingUntilFixed("Not doing removes yet")
+    }
 
     "find reordered elements" in {
       val before =

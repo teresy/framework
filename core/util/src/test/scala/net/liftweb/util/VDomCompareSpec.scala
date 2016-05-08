@@ -28,6 +28,12 @@ object VDomCompareSpec extends Specification {
       compare(a, b) must_== 1f
     }
 
+    "regard elements with the same tags but different child text nodes as different" in {
+      val a = <span>Some text</span>
+      val b = <span>Some other text</span>
+      compare(a, b) must_== 0.0f
+    }
+
     "regard two Text nodes with the same text as the same" in {
       val a = Text("text")
       val b = Text("text")
