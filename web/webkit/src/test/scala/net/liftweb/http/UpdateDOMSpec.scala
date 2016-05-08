@@ -179,6 +179,33 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       rtAndCompare(before, after)
     }
 
+    "insert an element identical to a sibling" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }.pendingUntilFixed
+
     "remove an element" in {
       val before =
         <body data-lift-content-id="main">
@@ -203,6 +230,33 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
 
       rtAndCompare(before, after)
     }
+
+    "remove an element identical to a sibling" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }.pendingUntilFixed
 
     "add an element and remove an element" in {
       val before =
