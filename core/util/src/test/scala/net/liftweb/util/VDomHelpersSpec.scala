@@ -206,4 +206,18 @@ object VDomHelpersSpec extends Specification with XmlMatchers {
     }
   }
 
+  "VDomHelpers.nodeAt" should {
+    "grab the requested node" in {
+      val tree = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      nodeAt(tree, 4) must_== Some(<li>msg 2</li>)
+    }
+  }
+
 }

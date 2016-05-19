@@ -215,6 +215,21 @@ object VDom {
       }
       traverseUpdate(root, atIndex, siblingsAfterFound)
     }
+
+    def nodeAt(root:Node, atIndex:Int):Option[Node] = {
+      def rec(child:Node, currentIndex:Int):(Int, Option[Node]) = {
+        val children = child.nonEmptyChildren.filter(isntWhitespace)
+
+        children.foldLeft((currentIndex + 1, Option.empty[Node])) {
+          case ((_, opt @ Some(_)), next) => (-1, opt)
+          case ((`atIndex`, None), next)  => (-1, Some(next))
+          case ((i, None), next)          => rec(next, i)
+        }
+     }
+
+      if(atIndex == 0) Some(root)
+      else rec(root, 0)._2
+    }
   }
 
 }
