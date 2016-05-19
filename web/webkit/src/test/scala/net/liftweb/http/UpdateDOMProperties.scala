@@ -2,17 +2,17 @@ package net.liftweb.http
 
 import net.liftweb.util.VDom.VDomHelpers
 import VDomHelpers._
-
-import org.scalacheck.{Gen, Properties, Prop}
+import org.scalacheck.{Gen, Prop, Properties}
 import Prop._
 
+import scala.collection.immutable.::
 import scala.xml.Node
 
 object VDomGen {
   import org.scalacheck.Gen._
 
-  def genMutation(n:Node, removable:List[Int]) = for {
-    mutation <- oneOf(genRemove(n, removable), genInsert(n))
+  def genMutation(n:Node, removable:List[Int], hasSwappableChildren:List[Int]) = for {
+    mutation <- oneOf(genRemove(n, removable), genInsert(n), genSwap(n, hasSwappableChildren))
   } yield {
     mutation
   }
@@ -33,6 +33,27 @@ object VDomGen {
   def genNode:Gen[Node] = for {
     tag <- oneOf("p", "br", "hr")
   } yield <xml></xml>.copy(label = tag)
+
+  def genSwap(n:Node, hasSwappableChildren:List[Int]):Gen[Node] = for {
+    index <- oneOf(hasSwappableChildren)
+    swapped <- genSwapPrivate(n, index)
+  } yield {
+    swapped
+  }
+
+  private def genSwapPrivate(n:Node, index:Int):Gen[Node] = {
+    val maybeChild = nodeAt(n, index)
+    val maybeCount = maybeChild.map(_.nonEmptyChildren.filter(isntWhitespace).size)
+
+    maybeChild.zip(maybeCount).headOption.map { case (child, count) =>
+      for {
+        pair <- pick(2, (0 to (count - 1)))
+      } yield {
+        val firstChild :: secondChild :: Nil = pair.toList
+        swapChildren(n, index, firstChild, secondChild)
+      }
+    }.getOrElse(n)
+  }
 }
 
 object UpdateDOMProperties extends Properties("UpdateDOM") {
@@ -58,7 +79,9 @@ object UpdateDOMProperties extends Properties("UpdateDOM") {
     </body>,
     isntWhitespace)
 
-  property("UpdateDOM should handle an arbitrary mutation of our static template") = forAll(VDomGen.genMutation(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16))) { after =>
+  property("UpdateDOM should handle an arbitrary mutation of our static template") = forAll(
+    VDomGen.genMutation(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16), List(1, 11))
+  ) { after =>
     UpdateDOMSpec.roundTrip(template, after) == after
   }
 }
