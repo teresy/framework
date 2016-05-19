@@ -192,6 +192,29 @@ object VDom {
       def siblingsAfterFound(child:Node, siblingsAfter:List[Node]):List[Node] = siblingsAfter
       traverseUpdate(root, atIndex, siblingsAfterFound)
     }
+
+    def swapChildren(root:Node, atIndex:Int, firstChild:Int, secondChild:Int):Node = {
+      def siblingsAfterFound(child:Node, siblingsAfter:List[Node]):List[Node] = {
+        val updated = child match {
+          case Elem(prefix, label, attributes, scope, _@_*) =>
+            val children = child.nonEmptyChildren.filter(isntWhitespace).toList
+
+            val l1 = children.take(firstChild)
+            val c1 = children(firstChild)
+            val l2 = children.drop(firstChild + 1).take(secondChild - firstChild - 1)
+            val c2 = children.drop(firstChild + 1).apply(secondChild - firstChild - 1)
+            val l3 = children.drop(secondChild + 1)
+
+            val updatedChildren = (l1 :+ c2) ++ l2 ++ (c1 +: l3)
+
+            Elem(prefix, label, attributes, scope, true, updatedChildren:_*)
+          case _ => child
+        }
+
+        updated :: siblingsAfter
+      }
+      traverseUpdate(root, atIndex, siblingsAfterFound)
+    }
   }
 
 }

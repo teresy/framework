@@ -184,4 +184,26 @@ object VDomHelpersSpec extends Specification with XmlMatchers {
     }
   }
 
+  "VDomHelpers.swapChildren" should {
+    "switch two specified children in the tree" in {
+      val before = <div>
+        <ul>
+          <li>msg 1</li>
+          <li>msg 2</li>
+          <li>msg 3</li>
+        </ul>
+      </div>
+
+      val after = <div>
+        <ul>
+          <li>msg 3</li>
+          <li>msg 2</li>
+          <li>msg 1</li>
+        </ul>
+      </div>
+
+      nodesMust_==(swapChildren(before, 1, 0, 2), after)
+    }
+  }
+
 }
