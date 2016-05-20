@@ -306,6 +306,31 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
 
       rtAndCompare(before, after)
     }
+
+    "add elements in two locations of the tree" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <ul>
+              <li>Message 1</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }.pendingUntilFixed("Fix this when we send indexes in the VNodePatchTree instead of empty placeholders")
+
   }
 
 }
