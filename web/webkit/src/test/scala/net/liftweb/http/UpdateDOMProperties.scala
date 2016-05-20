@@ -11,8 +11,17 @@ import scala.xml.Node
 object VDomGen {
   import org.scalacheck.Gen._
 
+  def genMutations(n:Node, removable:List[Int], hasSwappableChildren:List[Int]) = for {
+    numMutations <- choose(1, 5)
+    mutated <- (1 to numMutations).foldLeft(const(n)) {
+      case (gNode, _) => gNode.flatMap(n => genMutation(n, removable, hasSwappableChildren))
+    }
+  } yield {
+    mutated
+  }
+
   def genMutation(n:Node, removable:List[Int], hasSwappableChildren:List[Int]) = for {
-    mutation <- oneOf(genRemove(n, removable), genInsert(n), genSwap(n, hasSwappableChildren))
+    mutation <- oneOf(genRemove(n, removable), genInsert(n)) // , genSwap(n, hasSwappableChildren)
   } yield {
     mutation
   }
@@ -80,7 +89,7 @@ object UpdateDOMProperties extends Properties("UpdateDOM") {
     isntWhitespace)
 
   property("UpdateDOM should handle an arbitrary mutation of our static template") = forAll(
-    VDomGen.genMutation(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16), List(1, 11))
+    VDomGen.genMutations(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16), List(1, 11))
   ) { after =>
     UpdateDOMSpec.roundTrip(template, after) == after
   }
