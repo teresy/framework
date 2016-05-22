@@ -13,7 +13,7 @@ object VDom {
   trait VNodePatch
   case class VNodeInsert(position:Int, node:VNode) extends VNodePatch
   case class VNodeDelete(position:Int) extends VNodePatch
-  case class VNodeReorder(permutation:Int*) extends VNodePatch
+  case class VNodeReorder(permutation:List[Int]) extends VNodePatch
 
   case class VNodePatchTree(patches:List[VNodePatch], children:List[VNodePatchTree])
 
@@ -34,7 +34,7 @@ object VDom {
     override val typeHintFieldName = "type"
   }
 
-  private [util] case class DiffMatrix(matches:Map[Int, (Int, Float)], notInA: List[Int], notInB: List[Int])
+  private [util] case class DiffMatrix(matches:Map[Int, (Int, Float)], notInA: List[Int], notInB: List[Int], reorder: List[List[Int]])
   private [util] def diffMatrix(aChildren:List[Node], bChildren:List[Node]):DiffMatrix = {
     val compares = for {
       (a, i) <- aChildren.zipWithIndex
@@ -47,7 +47,6 @@ object VDom {
     val bWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Int, (Int, Float)]) {
       case (acc, (score, a, b)) => acc + (b -> (a, score))
     }
-
     val matches = aWithMatchAndScore.collect {
       case (a, (b, score)) if score > 0.0f => a -> (b, score)
     }
@@ -58,7 +57,28 @@ object VDom {
       case (a, (b, score)) if score <= 0.0f => a
     }.toList
 
-    DiffMatrix(matches, notInA, notInB)
+    val aList = aWithMatchAndScore.collect {
+      case (a, (b, score)) if score == 1.0f => b
+    }
+    val bList = bWithMatchAndScore.collect {
+      case (b, (a, score)) if score == 1.0f => a
+    }
+    val moveList = aList.zip(bList).toList.sortBy(_._1).collect{
+      case(a,b) if a!=b => (a,b)
+    }.flatMap(t => List(t._1, t._2)).distinct
+
+    val reorder = if(moveList == moveList.sorted) Nil else moveList
+
+    val testing = if (reorder == Nil) {
+      sortedCompares.collect {
+        case (score, a, b) if score == 1.0f && a != b => (a, b)
+      }.flatMap(t => List(t._1, t._2))
+        .distinct.sliding(2)
+        .map { case List(a, b) => List(b, a) }.toList
+    }
+      else List(reorder)
+
+    DiffMatrix(matches, notInA, notInB, testing)
   }
 
   def diff(a:Node, b:Node):VNodePatchTree = {
@@ -68,9 +88,14 @@ object VDom {
     val matrix = diffMatrix(aChildren, bChildren)
 
     val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
-    val removals  = matrix.notInB.map { i => VNodeDelete(i) }
+    val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
+    val reorders = if (matrix.reorder == Nil) Nil else matrix.reorder.collect {
+        case r => VNodeReorder(r)
+    }
 
-    val patches = removals ++ additions
+    val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List()))
+
+    println("patches: " + patches)
 
     val children = matrix.matches.collect {
       case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
@@ -88,19 +113,21 @@ object VDom {
     aId.isDefined && aId == bId
   }
 
-  def compare(a:Node, b:Node):Float =
-    if(a eq b) 1f
-    else if(a.label != b.label) 0f
-    else if(a.label == pcdata) if(a.text == b.text) 1f else 0f
-    else if(hasSameId(a, b)) 1f
-    else { // Compare children
+  def compare(a:Node, b:Node):Float = {
+    if (a eq b) 1f
+    else if (a.label != b.label) 0f
+    else if (a.label == pcdata) if (a.text == b.text) 1f else 0f
+    else if (hasSameId(a, b)) 1f
+    else {
+      // Compare children
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
       val matrix = diffMatrix(aChildren, bChildren)
-      val sum = matrix.matches.foldLeft(0.0f){ case (acc, (_, (_, score))) => acc + score }
+      val sum = matrix.matches.foldLeft(0.0f) { case (acc, (_, (_, score))) => acc + score }
       val length = Math.max(aChildren.length, bChildren.length)
-      if(length > 0) sum / length else 1.0f
+      if (length > 0) sum / length else 1.0f
     }
+  }
 
   object VNode {
     def text(t:String):VNode = VNode("#text", Map(), List(), Some(t))

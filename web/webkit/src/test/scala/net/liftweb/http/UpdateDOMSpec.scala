@@ -177,7 +177,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }
+    }.pendingUntilFixed
 
     "insert an element identical to a sibling" in {
       val before =
@@ -206,14 +206,14 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       rtAndCompare(before, after)
     }.pendingUntilFixed
 
-    "remove an element" in {
+
+    "insert two consecutive elements" in {
       val before =
         <body data-lift-content-id="main">
           <div>
             <hr/>
             <ul>
               <li>Message 1</li>
-              <li>Message 2</li>
             </ul>
           </div>
         </body>
@@ -223,7 +223,35 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
           <div>
             <hr/>
             <ul>
+              <li>Message 3</li>
               <li>Message 2</li>
+              <li>Message 1</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }.pendingUntilFixed
+
+    "remove two consecutive elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 3</li>
             </ul>
           </div>
         </body>
@@ -300,6 +328,190 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
             <ul>
               <li>Message 2</li>
               <li class="chat-message clearable">Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find reordered elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 4</li>
+              <li>Message 3</li>
+              <li>Message 1</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find one pair of swapped elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 1</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find more swapped reordered elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 1</li>
+              <li>Message 3</li>
+              <li>Message 5</li>
+              <li>Message 4</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }.pendingUntilFixed
+
+    "find added and swapped elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 1</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+              <li>Message 6</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find deleted and swapped elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 1</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find added, deleted, and swapped elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 1</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 6</li>
             </ul>
           </div>
         </body>

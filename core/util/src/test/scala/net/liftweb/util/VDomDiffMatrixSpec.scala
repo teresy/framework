@@ -22,7 +22,7 @@ object VDomDiffMatrixSpec extends Specification {
         <li>Message 1</li>
         <li>Message 2</li>
       </ul>
-      val expected = DiffMatrix(Map(0 -> (0, 1.0f), 1 -> (1, 1.0f)), Nil, Nil)
+      val expected = DiffMatrix(Map(0 -> (0, 1.0f), 1 -> (1, 1.0f)), Nil, Nil, Nil)
 
       diff(a, a) must_== expected
     }
@@ -35,7 +35,7 @@ object VDomDiffMatrixSpec extends Specification {
       val b = <ul>
         <li>Message 2</li>
       </ul>
-      val expected = DiffMatrix(Map(1 -> (0, 1.0f)), Nil, List(0))
+      val expected = DiffMatrix(Map(1 -> (0, 1.0f)), Nil, List(0), Nil)
 
       diff(a, b) must_== expected
     }
@@ -48,7 +48,7 @@ object VDomDiffMatrixSpec extends Specification {
         <li>Message 1</li>
         <li>Message 2</li>
       </ul>
-      val expected = DiffMatrix(Map(0 -> (1, 1.0f)), List(0), Nil)
+      val expected = DiffMatrix(Map(0 -> (1, 1.0f)), List(0), Nil, Nil)
 
       diff(a, b) must_== expected
     }
@@ -62,7 +62,7 @@ object VDomDiffMatrixSpec extends Specification {
         <li>Message 2</li>
         <li>Message 3</li>
       </ul>
-      val expected = DiffMatrix(Map(1 -> (0, 1.0f)), List(1), List(0))
+      val expected = DiffMatrix(Map(1 -> (0, 1.0f)), List(1), List(0), Nil)
 
       diff(a, b) must_== expected
     }
