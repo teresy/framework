@@ -124,7 +124,7 @@ object VDomCompareSpec extends Specification {
           <li>Message 1</li>
         </ul>
 
-      compare(a, b) must_== 0.0f
+      compare(a, b) must_== 1.0f
     }
 
     "regard elements with same tags and ids as the same regardless of children" in {

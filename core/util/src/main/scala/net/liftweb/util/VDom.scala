@@ -34,7 +34,7 @@ object VDom {
     override val typeHintFieldName = "type"
   }
 
-  private [util] case class DiffMatrix(matches:Map[Int, (Int, Float)], notInA: List[Int], notInB: List[Int], reorder: List[List[Int]])
+  private [util] case class DiffMatrix(matches:Map[Int, (Int, Float)], notInA: List[Int], notInB: List[Int])
   private [util] def diffMatrix(aChildren:List[Node], bChildren:List[Node]):DiffMatrix = {
     val compares = for {
       (a, i) <- aChildren.zipWithIndex
@@ -57,28 +57,7 @@ object VDom {
       case (a, (b, score)) if score <= 0.0f => a
     }.toList
 
-    val aList = aWithMatchAndScore.collect {
-      case (a, (b, score)) if score == 1.0f => b
-    }
-    val bList = bWithMatchAndScore.collect {
-      case (b, (a, score)) if score == 1.0f => a
-    }
-    val moveList = aList.zip(bList).toList.sortBy(_._1).collect{
-      case(a,b) if a!=b => (a,b)
-    }.flatMap(t => List(t._1, t._2)).distinct
-
-    val reorder = if(moveList == moveList.sorted) Nil else moveList
-
-    val testing = if (reorder == Nil) {
-      sortedCompares.collect {
-        case (score, a, b) if score == 1.0f && a != b => (a, b)
-      }.flatMap(t => List(t._1, t._2))
-        .distinct.sliding(2)
-        .map { case List(a, b) => List(b, a) }.toList
-    }
-      else List(reorder)
-
-    DiffMatrix(matches, notInA, notInB, testing)
+    DiffMatrix(matches, notInA, notInB)
   }
 
   def diff(a:Node, b:Node):VNodePatchTree = {
@@ -87,15 +66,24 @@ object VDom {
 
     val matrix = diffMatrix(aChildren, bChildren)
 
+    val cycleMatches = matrix.matches.collect {
+      case(a, (b, score)) => a -> b
+    }
+
+    val cycles = cycleMatches.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
+      val cycleList:List[List[Int]] = if (z._1 == z._2) maps
+      else List((List(z._1, z._2):::maps.head).distinct)
+      cycleList
+    }
+
     val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
     val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
-    val reorders = if (matrix.reorder == Nil) Nil else matrix.reorder.collect {
+    val reorders = if (cycles == Nil) Nil else cycles.collect {
+        case r if r.length==2 => VNodeReorder(r.reverse)
         case r => VNodeReorder(r)
     }
 
     val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List()))
-
-    println("patches: " + patches)
 
     val children = matrix.matches.collect {
       case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
