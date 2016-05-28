@@ -108,7 +108,7 @@ object VDomCompareSpec extends Specification {
       compare(a, b) must_== 0.0f
     }
 
-    "COMPARE" in {
+    "regard elements who have the same children but in different order as similar" in {
       val a =
         <ul>
           <li>Message 1</li>
