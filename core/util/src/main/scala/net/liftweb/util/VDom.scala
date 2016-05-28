@@ -75,8 +75,13 @@ object VDom {
         case (j, k) => if (i > j) (j, k) else (j + 1, k)
       }
     }
+    val matchesAdjusted:Map[Int, Int] = matrix.notInB.foldLeft(matchesAdjustedForAdditions) {
+      case (acc, i) => acc.map {
+        case (j, k) => if (i > j) (j, k) else (j - 1, k)
+      }
+    }
 
-    val cycles = matchesAdjustedForAdditions.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
+    val cycles = matchesAdjusted.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
       val cycleList:List[List[Int]] = if (z._1 == z._2) maps
       else List((List(z._1, z._2):::maps.head).distinct)
       cycleList

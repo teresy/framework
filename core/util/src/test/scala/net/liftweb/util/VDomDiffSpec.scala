@@ -76,7 +76,7 @@ object VDomDiffSpec extends Specification {
       diff(before, after) must_== expected
     }
 
-    "find an removed element" in {
+    "find a removed element" in {
       val before =
         <div>
           <hr/>
@@ -103,7 +103,7 @@ object VDomDiffSpec extends Specification {
         )
 
       diff(before, after) must_== expected
-    }.pendingUntilFixed
+    }
 
     "find reordered elements" in {
       val before =

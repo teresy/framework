@@ -310,7 +310,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }.pendingUntilFixed
+    }
 
     "insert an element with attributes" in {
       val before =
