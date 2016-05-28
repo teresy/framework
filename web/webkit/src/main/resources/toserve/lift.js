@@ -403,6 +403,7 @@
         switch (tf.type) {
           case "insert": insertNode(node, tf.position, tf.node); break;
           case "delete": deleteNode(node, tf.position); break;
+          case "reorder": reorderNode(node, tf.permutation); break;
         }
       }
       var j=0;
@@ -435,6 +436,12 @@
 
     function deleteNode(parent, position) {
       parent.removeChild(parent.children[position]);
+    }
+
+    function reorderNode(parent, cycle) {
+      for (var i = 0; i < cycle.length-1; i++) {
+        parent.insertBefore(parent.children[cycle[i]], parent.children[cycle[i+1]]);
+      }
     }
 
     ////////////////////////////////////////////////

@@ -108,6 +108,25 @@ object VDomCompareSpec extends Specification {
       compare(a, b) must_== 0.0f
     }
 
+    "COMPARE" in {
+      val a =
+        <ul>
+          <li>Message 1</li>
+          <li>Message 2</li>
+          <li>Message 3</li>
+          <li>Message 4</li>
+        </ul>
+      val b =
+        <ul>
+          <li>Message 2</li>
+          <li>Message 4</li>
+          <li>Message 3</li>
+          <li>Message 1</li>
+        </ul>
+
+      compare(a, b) must_== 1.0f
+    }
+
     "regard elements with same tags and ids as the same regardless of children" in {
       val a = <span id="same">Not</span>
       val b = <span id="same">Different</span>

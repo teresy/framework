@@ -32,7 +32,7 @@ object VDomFormatsSpec extends Specification {
     }
 
     "round-trip a typical VNodeReorder" in {
-      val patch = VNodeReorder(0, 2, 3)
+      val patch = VNodeReorder(List(0, 2, 3))
 
       check(patch)
     }
