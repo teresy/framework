@@ -66,22 +66,28 @@ object VDom {
 
     val matrix = diffMatrix(aChildren, bChildren)
 
-    val cycleMatches = matrix.matches.collect {
+    val matches = matrix.matches.map {
       case(a, (b, score)) => a -> b
     }
 
-    val cycles = cycleMatches.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
+    val matchesAdjustedForAdditions:Map[Int, Int] = matrix.notInA.foldLeft(matches) {
+      case (acc, i) => acc.map {
+        case (j, k) => if (i > j) (j, k) else (j + 1, k)
+      }
+    }
+
+    val cycles = matchesAdjustedForAdditions.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
       val cycleList:List[List[Int]] = if (z._1 == z._2) maps
       else List((List(z._1, z._2):::maps.head).distinct)
       cycleList
     }
 
-    val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
-    val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
     val reorders = if (cycles == Nil) Nil else cycles.collect {
         case r if r.length==2 => VNodeReorder(r.reverse)
         case r => VNodeReorder(r)
     }
+    val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
+    val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
 
     val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List()))
 
