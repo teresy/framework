@@ -105,6 +105,38 @@ object VDomDiffSpec extends Specification {
       diff(before, after) must_== expected
     }
 
+    "find a removed element identical to a sibling" in {
+      val before =
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 1</li>
+            <li>Message 2</li>
+            <li>Message 2</li>
+          </ul>
+        </div>
+
+      val after =
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 1</li>
+            <li>Message 2</li>
+          </ul>
+        </div>
+
+      val expected =
+        node(
+          node(),
+          node(
+            node(),
+            node()
+          ).withPatches(VNodeDelete(2))
+        )
+
+      diff(before, after) must_== expected
+    }
+
     "find reordered elements" in {
       val before =
         <div>
