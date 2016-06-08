@@ -204,7 +204,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }.pendingUntilFixed
+    }
 
 
     "insert two consecutive elements" in {
@@ -284,7 +284,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }.pendingUntilFixed
+    }
 
     "add an element and remove an element" in {
       val before =

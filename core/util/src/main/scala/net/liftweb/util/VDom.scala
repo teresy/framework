@@ -41,21 +41,36 @@ object VDom {
       (b, j) <- bChildren.zipWithIndex
     } yield (compare(a, b), i, j)
     val sortedCompares = compares.sortBy(_._1)
+
     val aWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Int, (Int, Float)]) {
-      case (acc, (score, a, b)) => acc + (a -> (b, score))
+      case (acc, (score, a, b)) =>
+        acc.find(_._2._1 == b) match {
+          case Some((origA, (origB, origScore))) if origScore < score => (acc - origA) + (a -> (b, score))
+          case None => acc + (a -> (b, score))
+          case _ => acc
+        }
     }
     val bWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Int, (Int, Float)]) {
-      case (acc, (score, a, b)) => acc + (b -> (a, score))
+      case (acc, (score, a, b)) =>
+        acc.find(_._2._1 == a) match {
+          case Some((origB, (origA, origScore))) if origScore < score => (acc - origB) + (b -> (a, score))
+          case None => acc + (b -> (a, score))
+          case _ => acc
+        }
     }
     val matches = aWithMatchAndScore.collect {
       case (a, (b, score)) if score > 0.0f => a -> (b, score)
     }
     val notInA = bWithMatchAndScore.collect {
       case (b, (a, score)) if score <= 0.0f => b
-    }.toList
+    }.toList ++ bChildren.zipWithIndex.collect {
+      case (_, i) if !bWithMatchAndScore.keySet.contains(i) => i
+    }
     val notInB = aWithMatchAndScore.collect {
       case (a, (b, score)) if score <= 0.0f => a
-    }.toList
+    }.toList ++ aChildren.zipWithIndex.collect {
+      case (_, i) if !aWithMatchAndScore.keySet.contains(i) => i
+    }
 
     DiffMatrix(matches, notInA, notInB)
   }
@@ -96,10 +111,10 @@ object VDom {
 
     val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List()))
 
-    val children = matrix.matches.collect {
+    val children = matrix.matches.toList.sortBy(_._1).collect {
       case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
       case _ => VNodePatchTree(List(), List())  // No changes for this node, make a placeholder
-    }.toList
+    }
 
     VNodePatchTree(patches, children)
   }
