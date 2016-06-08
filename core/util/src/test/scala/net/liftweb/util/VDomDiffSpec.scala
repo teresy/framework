@@ -33,15 +33,11 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node(),
-            node()
-          ).withPatches(VNodeInsert(2, VNode("li", Map(), List(txt("Message 3")))))
+        node(0,
+          node(1).withPatches(VNodeInsert(2, VNode("li", Map(), List(txt("Message 3")))))
         )
 
-      diff(before, after) must_== expected
+      diff(0, before, after) must_== expected
     }
 
     "find an inserted element" in {
@@ -65,15 +61,11 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node(),
-            node()
-          ).withPatches(VNodeInsert(1, VNode("li", Map(), List(txt("Message 3")))))
+        node(0,
+          node(1).withPatches(VNodeInsert(1, VNode("li", Map(), List(txt("Message 3")))))
         )
 
-      diff(before, after) must_== expected
+      diff(0, before, after) must_== expected
     }
 
     "find a removed element" in {
@@ -95,14 +87,11 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node()
-          ).withPatches(VNodeDelete(0))
+        node(0,
+          node(1).withPatches(VNodeDelete(0))
         )
 
-      diff(before, after) must_== expected
+      diff(0, before, after) must_== expected
     }
 
     "find a removed element identical to a sibling" in {
@@ -126,15 +115,11 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node(),
-            node()
-          ).withPatches(VNodeDelete(2))
+        node(0,
+          node(1).withPatches(VNodeDelete(2))
         )
 
-      diff(before, after) must_== expected
+      diff(0, before, after) must_== expected
     }
 
     "find reordered elements" in {
@@ -161,17 +146,11 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node(),
-            node(),
-            node(),
-            node()
-          ).withPatches(VNodeReorder(List(0, 3, 1)))
+        node(0,
+          node(1).withPatches(VNodeReorder(List(0, 3, 1)))
         )
 
-      diff(before, after) must_== expected
+      diff(0, before, after) must_== expected
     }
 
     "find more reordered elements" in {
@@ -194,15 +173,11 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node(),
-            node()
-          ).withPatches(VNodeReorder(List(1, 0)))
+        node(0,
+          node(1).withPatches(VNodeReorder(List(1, 0)))
         )
 
-      diff(before, after) must_== expected
+      diff(0, before, after) must_== expected
     }
 
     "find added and reordered elements" in {
@@ -226,17 +201,12 @@ object VDomDiffSpec extends Specification {
         </div>
 
       val expected =
-        node(
-          node(),
-          node(
-            node(),
-            node(),
-            node()
-          ).withPatches(VNodeInsert(2, VNode("li", Map(), List(txt("Message 3")))), VNodeReorder(List(1, 0)))
+        node(0,
+          node(1).withPatches(VNodeInsert(2, VNode("li", Map(), List(txt("Message 3")))), VNodeReorder(List(1, 0)))
         )
 
-      diff(before, after) must_== expected
-    }.pendingUntilFixed("Fix this when we send indexes in the VNodePatchTree instead of empty placeholders")
+      diff(0, before, after) must_== expected
+    }
 
   }
 }

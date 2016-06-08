@@ -11,11 +11,11 @@ object VDom {
 
   // TODO: Attribute updates
   trait VNodePatch
-  case class VNodeInsert(position:Int, node:VNode) extends VNodePatch
-  case class VNodeDelete(position:Int) extends VNodePatch
+  case class VNodeInsert(index:Int, node:VNode) extends VNodePatch
+  case class VNodeDelete(index:Int) extends VNodePatch
   case class VNodeReorder(permutation:List[Int]) extends VNodePatch
 
-  case class VNodePatchTree(patches:List[VNodePatch], children:List[VNodePatchTree])
+  case class VNodePatchTree(index:Int, patches:List[VNodePatch], children:List[VNodePatchTree])
 
   object typeHints extends TypeHints {
     val classToHint:Map[Class[_], String] = Map(
@@ -75,7 +75,7 @@ object VDom {
     DiffMatrix(matches, notInA, notInB)
   }
 
-  def diff(a:Node, b:Node):VNodePatchTree = {
+  def diff(index:Int, a:Node, b:Node):VNodePatchTree = {
     val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
     val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
 
@@ -112,11 +112,10 @@ object VDom {
     val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List()))
 
     val children = matrix.matches.toList.sortBy(_._1).collect {
-      case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
-      case _ => VNodePatchTree(List(), List())  // No changes for this node, make a placeholder
+      case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(bi, aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
     }
 
-    VNodePatchTree(patches, children)
+    VNodePatchTree(index, patches, children)
   }
 
   def hasSameId(a:Node, b:Node):Boolean = {
@@ -168,7 +167,7 @@ object VDom {
     def isWhitespace(n:Node)   = isText(n) && n.text.trim.isEmpty
     def isntWhitespace(n:Node) = !isWhitespace(n)
 
-    def node(child:VNodePatchTree*):VNodePatchTree = VNodePatchTree(List(), child.toList)
+    def node(index:Int, child:VNodePatchTree*):VNodePatchTree = VNodePatchTree(index, List(), child.toList)
     def text(t:String) = VNode(pcdata, Map(), List(), Some(t))
 
     implicit class EnhancedVNodeTransformTree(t:VNodePatchTree) {
