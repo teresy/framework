@@ -207,27 +207,23 @@ object VDomDiffSpec extends Specification {
 
     "find added and reordered elements" in {
       val before =
-        <body data-lift-content-id="main">
-          <div>
-            <hr/>
-            <ul>
-              <li>Message 1</li>
-              <li>Message 2</li>
-            </ul>
-          </div>
-        </body>
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 1</li>
+            <li>Message 2</li>
+          </ul>
+        </div>
 
       val after =
-        <body data-lift-content-id="main">
-          <div>
-            <hr/>
-            <ul>
-              <li>Message 2</li>
-              <li>Message 1</li>
-              <li>Message 3</li>
-            </ul>
-          </div>
-        </body>
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 2</li>
+            <li>Message 1</li>
+            <li>Message 3</li>
+          </ul>
+        </div>
 
       val expected =
         node(
@@ -240,7 +236,7 @@ object VDomDiffSpec extends Specification {
         )
 
       diff(before, after) must_== expected
-    }.pendingUntilFixed
+    }.pendingUntilFixed("Fix this when we send indexes in the VNodePatchTree instead of empty placeholders")
 
   }
 }
