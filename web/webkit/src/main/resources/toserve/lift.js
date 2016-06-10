@@ -401,16 +401,14 @@
       for(var i=0; i < tree.patches.length; i++) {
         var tf = tree.patches[i];
         switch (tf.type) {
-          case "insert": insertNode(node, tf.position, tf.node); break;
-          case "delete": deleteNode(node, tf.position); break;
+          case "insert": insertNode(node, tf.index, tf.node); break;
+          case "delete": deleteNode(node, tf.index); break;
           case "reorder": reorderNode(node, tf.permutation); break;
         }
       }
-      var j=0;
       for(var i=0; i < tree.children.length; i++) {
-        while(node.childNodes[j].nodeName === "#text" && node.childNodes[j].data.trim() === "") j++;
-
-        updateNode(node.childNodes[j++], tree.children[i]);
+        var child = tree.children[i];
+        updateNode(node.children[child.index], child);
       }
     }
 
@@ -425,17 +423,17 @@
       return e;
     }
 
-    function insertNode(parent, position, vnode) {
-      if(position < parent.children.length) {
-        parent.insertBefore(createElement(vnode), parent.children[position]);
+    function insertNode(parent, index, vnode) {
+      if(index < parent.children.length) {
+        parent.insertBefore(createElement(vnode), parent.children[index]);
       }
       else {
         parent.appendChild(createElement(vnode));
       }
     }
 
-    function deleteNode(parent, position) {
-      parent.removeChild(parent.children[position]);
+    function deleteNode(parent, index) {
+      parent.removeChild(parent.children[index]);
     }
 
     function reorderNode(parent, cycle) {

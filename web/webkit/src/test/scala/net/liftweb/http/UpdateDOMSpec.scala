@@ -54,7 +54,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       else Elem(null, e.getNodeName, attrs, TopScope, true, children:_*)
     }
 
-    val diff = VDom.diff(before, after)
+    val diff = VDom.diff(0, before, after)
     val js = JE.Call("lift.updateBody", Extraction.decompose(diff)).toJsCmd
 
     val file = File.createTempFile("test", "html")
@@ -357,7 +357,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }.pendingUntilFixed("Fix this when we send indexes in the VNodePatchTree instead of empty placeholders")
+    }
 
     "find reordered elements" in {
       val before =
