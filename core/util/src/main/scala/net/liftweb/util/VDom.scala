@@ -118,12 +118,20 @@ object VDom {
     VNodePatchTree(index, patches, children)
   }
 
+  private [this] def getId(n:Node) = n.attributes.collectFirst { case UnprefixedAttribute("id", Text(v), _) => v }
+
   def hasSameId(a:Node, b:Node):Boolean = {
-    def getId(n:Node) = n.attributes.collectFirst { case UnprefixedAttribute("id", Text(v), _) => v }
     val aId = getId(a)
     val bId = getId(b)
 
-    aId.isDefined && aId == bId
+    (aId.isDefined || bId.isDefined) && aId == bId
+  }
+
+  def hasDifferentIds(a:Node, b:Node):Boolean = {
+    val aId = getId(a)
+    val bId = getId(b)
+
+    (aId.isDefined || bId.isDefined) && aId != bId
   }
 
   def compare(a:Node, b:Node):Float = {
@@ -131,6 +139,7 @@ object VDom {
     else if (a.label != b.label) 0f
     else if (a.label == pcdata) if (a.text == b.text) 1f else 0f
     else if (hasSameId(a, b)) 1f
+    else if (hasDifferentIds(a, b)) 0f
     else {
       // Compare children
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList

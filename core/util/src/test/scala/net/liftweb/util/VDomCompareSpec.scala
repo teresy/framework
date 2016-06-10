@@ -127,6 +127,32 @@ object VDomCompareSpec extends Specification {
       compare(a, b) must_== 1.0f
     }
 
+    "regard elements as the same if they both have the same attributes" in {
+      val a = <input type="text" name="in"/>
+      val b = <input type="text" name="in"/>
+
+      compare(a, b) must_== 1.0f
+    }
+
+    "regard elements with different attributes as dissimilar" in {
+      val a = <input type="text" name="in"/>
+      val b = <input type="submit" value="Submit"/>
+
+      compare(a, b) must_== 0.0f
+    }.pendingUntilFixed
+
+    "regard elements with different ids as dissimilar" in {
+      val a = <span id="same">same</span>
+      val b = <span id="different">same</span>
+      compare(a, b) must_== 0f
+    }
+
+    "regard elements as dissimilar if one has an id and the other doesn't" in {
+      val a = <span id="same">same</span>
+      val b = <span>same</span>
+      compare(a, b) must_== 0f
+    }
+
     "regard elements with same tags and ids as the same regardless of children" in {
       val a = <span id="same">Not</span>
       val b = <span id="same">Different</span>
