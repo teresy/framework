@@ -6,7 +6,7 @@ import org.scalacheck.{Gen, Prop, Properties}
 import Prop._
 
 import scala.collection.immutable.::
-import scala.xml.Node
+import scala.xml.{Node, Text}
 
 object VDomGen {
   import org.scalacheck.Gen._
@@ -40,8 +40,12 @@ object VDomGen {
   }
 
   def genNode:Gen[Node] = for {
-    tag <- oneOf("p", "br", "hr")
-  } yield <xml></xml>.copy(label = tag)
+    tag <- oneOf("p", "br", "hr", pcdata)
+    str <- alphaStr
+  } yield {
+    if(tag == pcdata) Text(str)
+    else <xml></xml>.copy(label = tag)
+  }
 
   def genSwap(n:Node, hasSwappableChildren:List[Int]):Gen[Node] = for {
     index <- oneOf(hasSwappableChildren)
