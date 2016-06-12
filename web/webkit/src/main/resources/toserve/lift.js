@@ -404,6 +404,8 @@
           case "insert": insertNode(node, tf.index, tf.node); break;
           case "delete": deleteNode(node, tf.index); break;
           case "reorder": reorderNode(node, tf.permutation); break;
+          case "attrSet": setAttribute(node, tf.k, tf.v); break;
+          case "attrRm": removeAttribute(node, tf.k); break;
         }
       }
       for(var i=0; i < tree.children.length; i++) {
@@ -440,6 +442,14 @@
       for (var i = 0; i < cycle.length-1; i++) {
         parent.insertBefore(parent.children[cycle[i]], parent.children[cycle[i+1]]);
       }
+    }
+
+    function setAttribute(node, key, value) {
+      node.setAttribute(key, value);
+    }
+
+    function removeAttribute(node, key) {
+      node.removeAttribute(key);
     }
 
     ////////////////////////////////////////////////

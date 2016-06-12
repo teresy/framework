@@ -542,6 +542,85 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
 
       rtAndCompare(before, after)
     }
+
+    "update attributes which have been changed" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul class="bold">
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul class="italics">
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find attributes which have been added" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul class="italics">
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "find attributes which have been removed" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul class="bold">
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
   }
 
 }
