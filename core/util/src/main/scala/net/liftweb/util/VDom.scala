@@ -118,7 +118,10 @@ object VDom {
     VNodePatchTree(index, patches, children)
   }
 
-  private [this] def getId(n:Node) = n.attributes.collectFirst { case UnprefixedAttribute("id", Text(v), _) => v }
+  private [this] def getAttr(n:Node, attr:String) = n.attributes.collectFirst { case UnprefixedAttribute(`attr`, Text(v), _) => v }
+  private [this] def getId(n:Node) = getAttr(n, "id")
+  private [this] def getName(n:Node) = getAttr(n, "name")
+  private [this] def getType(n:Node) = getAttr(n, "type")
 
   def hasSameId(a:Node, b:Node):Boolean = {
     val aId = getId(a)
@@ -134,12 +137,36 @@ object VDom {
     (aId.isDefined || bId.isDefined) && aId != bId
   }
 
+  def areSameInputs(a:Node, b:Node):Boolean =
+    if(a.label != "input" || b.label != "input") false
+    else {
+      val aName = getName(a)
+      val bName = getName(b)
+      val aType = getType(a)
+      val bType = getType(b)
+
+      aName == bName && aType == bType
+    }
+
+  def areDifferentInputs(a:Node, b:Node):Boolean =
+    if(a.label != "input" || b.label != "input") false
+    else {
+      val aName = getName(a)
+      val bName = getName(b)
+      val aType = getType(a)
+      val bType = getType(b)
+
+      aName != bName || bType != aType
+    }
+
   def compare(a:Node, b:Node):Float = {
     if (a eq b) 1f
     else if (a.label != b.label) 0f
     else if (a.label == pcdata) if (a.text == b.text) 1f else 0f
     else if (hasSameId(a, b)) 1f
     else if (hasDifferentIds(a, b)) 0f
+    else if (areSameInputs(a, b)) 1f
+    else if (areDifferentInputs(a, b)) 0f
     else {
       // Compare children
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList

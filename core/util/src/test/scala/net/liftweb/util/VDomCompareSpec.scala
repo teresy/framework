@@ -135,8 +135,8 @@ object VDomCompareSpec extends Specification {
     }
 
     "regard elements with different attributes as dissimilar" in {
-      val a = <input type="text" name="in"/>
-      val b = <input type="submit" value="Submit"/>
+      val a = <div class="text"/>
+      val b = <div class="submit"/>
 
       compare(a, b) must_== 0.0f
     }.pendingUntilFixed
@@ -157,6 +157,24 @@ object VDomCompareSpec extends Specification {
       val a = <span id="same">Not</span>
       val b = <span id="same">Different</span>
       compare(a, b) must_== 1f
+    }
+
+    "regard two input elements as the same if both type and name are the same" in {
+      val a = <input type="text" name="bob"/>
+      val b = <input type="text" name="bob"/>
+      compare(a, b) must_== 1f
+    }
+
+    "regard two input elements as the dissimilar if the names are different" in {
+      val a = <input type="text" name="bob"/>
+      val b = <input type="text" name="jill"/>
+      compare(a, b) must_== 0f
+    }
+
+    "regard two input elements as the dissimilar if the types are different" in {
+      val a = <input type="text" name="jill"/>
+      val b = <input type="password" name="jill"/>
+      compare(a, b) must_== 0f
     }
   }
 
