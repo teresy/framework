@@ -621,6 +621,32 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       rtAndCompare(before, after)
     }
 
+    "delete children text nodes when the parent attributes match" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li class="chat-message">Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li class="chat-message"/>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
   }
 
 }

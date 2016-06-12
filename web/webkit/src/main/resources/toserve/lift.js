@@ -397,12 +397,23 @@
       }
     }
 
+    function nonWhitespaceChildren(node) {
+      var children = [];
+      for(var i=0; i < node.childNodes.length; i++) {
+        var child = node.childNodes[i];
+        if(child.nodeName !== "#text" || child.data.trim() !== "")
+          children.push(child);
+      }
+      return children;
+    }
+
     function updateNode(node, tree) {
+      var children = nonWhitespaceChildren(node);
       for(var i=0; i < tree.patches.length; i++) {
         var tf = tree.patches[i];
         switch (tf.type) {
           case "insert": insertNode(node, tf.index, tf.node); break;
-          case "delete": deleteNode(node, tf.index); break;
+          case "delete": deleteNode(node, children, tf.index); break;
           case "reorder": reorderNode(node, tf.permutation); break;
           case "attrSet": setAttribute(node, tf.k, tf.v); break;
           case "attrRm": removeAttribute(node, tf.k); break;
@@ -434,8 +445,8 @@
       }
     }
 
-    function deleteNode(parent, index) {
-      parent.removeChild(parent.children[index]);
+    function deleteNode(parent, children, index) {
+      parent.removeChild(children[index]);
     }
 
     function reorderNode(parent, cycle) {
