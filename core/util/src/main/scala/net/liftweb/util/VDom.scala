@@ -118,6 +118,7 @@ object VDom {
     VNodePatchTree(index, patches, children)
   }
 
+  private [this] def getAttrs(n:Node):Map[String, String] = n.attributes.collect { case UnprefixedAttribute(a, Text(v), _) => a -> v}.toMap
   private [this] def getAttr(n:Node, attr:String) = n.attributes.collectFirst { case UnprefixedAttribute(`attr`, Text(v), _) => v }
   private [this] def getId(n:Node) = getAttr(n, "id")
   private [this] def getName(n:Node) = getAttr(n, "name")
@@ -172,9 +173,19 @@ object VDom {
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
       val matrix = diffMatrix(aChildren, bChildren)
-      val sum = matrix.matches.foldLeft(0.0f) { case (acc, (_, (_, score))) => acc + score }
-      val length = Math.max(aChildren.length, bChildren.length)
-      if (length > 0) sum / length else 1.0f
+      val childrenSum = matrix.matches.foldLeft(0.0f) { case (acc, (_, (_, score))) => acc + score }
+      val childrenLength = Math.max(aChildren.length, bChildren.length)
+
+      // Compare attributes
+      val aAttrs = getAttrs(a)
+      val bAttrs = getAttrs(b)
+      val numAttrs = (aAttrs.keySet ++ bAttrs.keySet).size
+      val sameAttrs = aAttrs.collect { case (a, v) if bAttrs.get(a) == Some(v) => a }.size
+
+      val totalPossible = childrenLength + numAttrs
+      val total = childrenSum + sameAttrs.toFloat
+
+      if (totalPossible > 0) total / totalPossible else 1.0f
     }
   }
 

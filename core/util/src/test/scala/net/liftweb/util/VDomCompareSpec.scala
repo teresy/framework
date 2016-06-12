@@ -139,7 +139,21 @@ object VDomCompareSpec extends Specification {
       val b = <div class="submit"/>
 
       compare(a, b) must_== 0.0f
-    }.pendingUntilFixed
+    }
+
+    "regard elements with similiarity as a ratio of children and attributes in common" in {
+      val a = <div class="blah" data-lift="bleh">
+        <span>One</span>
+        <span>Two</span>
+      </div>
+      val b = <div class="garbage" data-lift="bleh">
+        <span>One</span>
+        <span>Two</span>
+        <span>Three</span>
+      </div>
+
+      compare(a, b) must_== 0.6f
+    }
 
     "regard elements with different ids as dissimilar" in {
       val a = <span id="same">same</span>
