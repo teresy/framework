@@ -208,5 +208,32 @@ object VDomDiffSpec extends Specification {
       diff(0, before, after) must_== expected
     }
 
+    "find attributes which have been changed" in {
+      val before = <div class="bold"></div>
+      val after  = <div class="italics"></div>
+
+      val expected = node(0).withPatches(VNodeAttrSet("class", "italics"))
+
+      diff(0, before, after) must_== expected
+    }
+
+    "find attributes which have been added" in {
+      val before = <div></div>
+      val after  = <div class="italics"></div>
+
+      val expected = node(0).withPatches(VNodeAttrSet("class", "italics"))
+
+      diff(0, before, after) must_== expected
+    }
+
+    "find attributes which have been removed" in {
+      val before = <div class="italics"></div>
+      val after  = <div></div>
+
+      val expected = node(0).withPatches(VNodeAttrRm("class"))
+
+      diff(0, before, after) must_== expected
+    }
+
   }
 }

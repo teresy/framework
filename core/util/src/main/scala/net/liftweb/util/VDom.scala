@@ -14,6 +14,8 @@ object VDom {
   case class VNodeInsert(index:Int, node:VNode) extends VNodePatch
   case class VNodeDelete(index:Int) extends VNodePatch
   case class VNodeReorder(permutation:List[Int]) extends VNodePatch
+  case class VNodeAttrSet(k:String, v:String) extends VNodePatch
+  case class VNodeAttrRm(k:String) extends VNodePatch
 
   case class VNodePatchTree(index:Int, patches:List[VNodePatch], children:List[VNodePatchTree])
 
@@ -21,7 +23,9 @@ object VDom {
     val classToHint:Map[Class[_], String] = Map(
       classOf[VNodeInsert] -> "insert",
       classOf[VNodeDelete] -> "delete",
-      classOf[VNodeReorder] -> "reorder"
+      classOf[VNodeReorder] -> "reorder",
+      classOf[VNodeAttrSet] -> "attrSet",
+      classOf[VNodeAttrRm] -> "attrRm"
     )
     val hint2Class:Map[String, Class[_]] = classToHint.map { case (c, h) => h -> c }.toMap
     override val hints: List[Class[_]] = classToHint.keysIterator.toList
@@ -103,13 +107,18 @@ object VDom {
     }
 
     val reorders = if (cycles == Nil) Nil else cycles.collect {
-        case r if r.length==2 => VNodeReorder(r.reverse)
-        case r => VNodeReorder(r)
+      case r if r.length==2 => VNodeReorder(r.reverse)
+      case r => VNodeReorder(r)
     }
     val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
     val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
 
-    val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List()))
+    val aAttrs = getAttrs(a)
+    val bAttrs = getAttrs(b)
+    val setAttrs = bAttrs.collect { case (a, v) if aAttrs.get(a) != Some(v) => VNodeAttrSet(a, v) }
+    val rmAttrs  = aAttrs.collect { case (a, v) if bAttrs.get(a) == None => VNodeAttrRm(a) }
+
+    val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List())) ++ setAttrs ++ rmAttrs 
 
     val children = matrix.matches.toList.sortBy(_._1).collect {
       case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(bi, aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
