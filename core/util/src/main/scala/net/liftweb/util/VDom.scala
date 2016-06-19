@@ -38,6 +38,9 @@ object VDom {
     override val typeHintFieldName = "type"
   }
 
+  private [util] object DiffMatrix {
+    val empty = DiffMatrix(Map(), Nil, Nil)
+  }
   private [util] case class DiffMatrix(matches:Map[Int, (Int, Float)], notInA: List[Int], notInB: List[Int])
   private [util] def diffMatrix(aChildren:List[Node], bChildren:List[Node]):DiffMatrix = {
     val compares = for {
@@ -80,55 +83,64 @@ object VDom {
   }
 
   def diff(index:Int, a:Node, b:Node):VNodePatchTree = {
-    val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
-    val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
+    if(getAttr(a, "data-lift-ignore-on-update-dom").isDefined || getAttr(b, "data-lift-ignore-on-update-dom").isDefined) VNodePatchTree(index, Nil, Nil)
+    else {
+      val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
+      val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
 
-    val matrix = diffMatrix(aChildren, bChildren)
+      val matrix =
+        if(getAttr(a, "data-lift-ignore-on-update-dom").isDefined || getAttr(b, "data-lift-ignore-on-update-dom").isDefined) DiffMatrix.empty
+        else diffMatrix(aChildren, bChildren)
 
-    val matches = matrix.matches.map {
-      case(a, (b, score)) => a -> b
-    }
-
-    val matchesAdjustedForAdditions:Map[Int, Int] = matrix.notInA.foldLeft(matches) {
-      case (acc, i) => acc.map {
-        case (j, k) => if (i > j) (j, k) else (j + 1, k)
+      val matches = matrix.matches.map {
+        case(a, (b, score)) => a -> b
       }
-    }
-    val matchesAdjusted:Map[Int, Int] = matrix.notInB.foldLeft(matchesAdjustedForAdditions) {
-      case (acc, i) => acc.map {
-        case (j, k) => if (i > j) (j, k) else (j - 1, k)
+
+      val matchesAdjustedForAdditions:Map[Int, Int] = matrix.notInA.foldLeft(matches) {
+        case (acc, i) => acc.map {
+          case (j, k) => if (i > j) (j, k) else (j + 1, k)
+        }
       }
+      val matchesAdjusted:Map[Int, Int] = matrix.notInB.foldLeft(matchesAdjustedForAdditions) {
+        case (acc, i) => acc.map {
+          case (j, k) => if (i > j) (j, k) else (j - 1, k)
+        }
+      }
+
+      val cycles = matchesAdjusted.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
+        val cycleList:List[List[Int]] = if (z._1 == z._2) maps
+        else List((List(z._1, z._2):::maps.head).distinct)
+        cycleList
+      }
+
+      val reorders = if (cycles == Nil) Nil else cycles.collect {
+        case r if r.length==2 => VNodeReorder(r.reverse)
+        case r => VNodeReorder(r)
+      }
+      val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
+      val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
+
+      val aAttrs = getAttrs(a)
+      val bAttrs = getAttrs(b)
+      val setAttrs = bAttrs.collect { case (a, v) if aAttrs.get(a) != Some(v) => VNodeAttrSet(a, v) }
+      val rmAttrs  = aAttrs.collect { case (a, v) if bAttrs.get(a) == None => VNodeAttrRm(a) }
+
+      val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List())) ++ setAttrs ++ rmAttrs
+
+      val children = matrix.matches.toList.sortBy(_._1).collect {
+        case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(bi, aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
+      }
+
+      VNodePatchTree(index, patches, children)
     }
 
-    val cycles = matchesAdjusted.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
-      val cycleList:List[List[Int]] = if (z._1 == z._2) maps
-      else List((List(z._1, z._2):::maps.head).distinct)
-      cycleList
-    }
-
-    val reorders = if (cycles == Nil) Nil else cycles.collect {
-      case r if r.length==2 => VNodeReorder(r.reverse)
-      case r => VNodeReorder(r)
-    }
-    val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
-    val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
-
-    val aAttrs = getAttrs(a)
-    val bAttrs = getAttrs(b)
-    val setAttrs = bAttrs.collect { case (a, v) if aAttrs.get(a) != Some(v) => VNodeAttrSet(a, v) }
-    val rmAttrs  = aAttrs.collect { case (a, v) if bAttrs.get(a) == None => VNodeAttrRm(a) }
-
-    val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List())) ++ setAttrs ++ rmAttrs 
-
-    val children = matrix.matches.toList.sortBy(_._1).collect {
-      case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(bi, aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
-    }
-
-    VNodePatchTree(index, patches, children)
   }
 
-  private [this] def getAttrs(n:Node):Map[String, String] = n.attributes.collect { case UnprefixedAttribute(a, Text(v), _) => a -> v}.toMap
-  private [this] def getAttr(n:Node, attr:String) = n.attributes.collectFirst { case UnprefixedAttribute(`attr`, Text(v), _) => v }
+  private [this] def getAttrs(n:Node):Map[String, String] = n.attributes.collect {
+    case UnprefixedAttribute(a, Text(v), _) => a -> v
+    case UnprefixedAttribute(a, List(),  _) => a -> ""
+  }.toMap
+  private [this] def getAttr(n:Node, attr:String):Option[String] = getAttrs(n).get(attr)
   private [this] def getId(n:Node) = getAttr(n, "id")
   private [this] def getName(n:Node) = getAttr(n, "name")
   private [this] def getType(n:Node) = getAttr(n, "type")
