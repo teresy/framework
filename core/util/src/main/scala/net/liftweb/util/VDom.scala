@@ -142,6 +142,11 @@ object VDom {
   private [this] def getName(n:Node) = getAttr(n, "name")
   private [this] def getType(n:Node) = getAttr(n, "type")
 
+  // TODO: Do this for all Lift IDs, not just forms?
+  def areFormsWithLiftIds(a:Node, b:Node):Boolean =
+    if(a.label != "form" || b.label != "form") false
+    else isLiftId(getId(a)) && isLiftId(getId(b))
+
   def hasSameId(a:Node, b:Node):Boolean = {
     val aId = getId(a)
     val bId = getId(b)
@@ -156,19 +161,17 @@ object VDom {
     (aId.isDefined || bId.isDefined) && aId != bId
   }
 
-  def isLiftId(s:String):Boolean = s.startsWith("F") && s.length == 19
+  def isLiftId(maybeId:Option[String]):Boolean = maybeId.map(id => id.startsWith("F") && id.length == 19).getOrElse(false)
 
   def areSameInputs(a:Node, b:Node):Boolean =
     if(a.label != "input" || b.label != "input") false
     else {
       val aName = getName(a)
       val bName = getName(b)
-      val aNameIsLift = aName.map(isLiftId).getOrElse(false)
-      val bNameIsLift = bName.map(isLiftId).getOrElse(false)
       val aType = getType(a)
       val bType = getType(b)
 
-      (aName == bName || (aNameIsLift && bNameIsLift)) && aType == bType
+      (aName == bName || (isLiftId(aName) && isLiftId(bName))) && aType == bType
     }
 
   def areDifferentInputs(a:Node, b:Node):Boolean =
@@ -186,6 +189,7 @@ object VDom {
     if (a eq b) if(ai == bi) 1f else 0.5f
     else if (a.label != b.label) 0f
     else if (a.label == pcdata) if (a.text == b.text) 1f else 0f
+    else if (areFormsWithLiftIds(a, b)) 1f
     else if (hasSameId(a, b)) 1f
     else if (hasDifferentIds(a, b)) 0f
     else if (areSameInputs(a, b)) 1f

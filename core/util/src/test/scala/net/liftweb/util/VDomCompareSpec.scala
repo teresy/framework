@@ -205,6 +205,16 @@ object VDomCompareSpec extends Specification {
       compare(a, 0, b, 0) must_== 1f
     }
 
+    "regard two forms with different ids assigned by Lift as similar" in {
+      val a = <form id="F265092769361EVWYMA">
+        <input type="text" name="F2650927693340F5INF"/>
+      </form>
+      val b = <form id="F265092769418MACZXI">
+        <input type="text" name="F265092769366SLETQS"/>
+      </form>
+      compare(a, 0, b, 0) must_== 1f
+    }
+
     "regard two identical elements as half similar if at different indices" in {
       val a = <div></div>
       compare(a, 0, a, 1) must_== 0.5f
