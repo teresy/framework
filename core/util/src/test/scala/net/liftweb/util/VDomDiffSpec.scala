@@ -235,9 +235,9 @@ object VDomDiffSpec extends Specification {
       diff(0, before, after) must_== expected
     }
 
-    "should ignore any elements marked with data-lift-ignore-on-update-dom" in {
-      val before = <div data-lift-ignore-on-update-dom="">Some stuff</div>
-      val after  = <div data-lift-ignore-on-update-dom="" attr="blah">Different stuff</div>
+    "should ignore any elements marked with data-lift-ignore-on-update" in {
+      val before = <div data-lift-ignore-on-update="">Some stuff</div>
+      val after  = <div data-lift-ignore-on-update="" attr="blah">Different stuff</div>
 
       val expected = node(0)
 

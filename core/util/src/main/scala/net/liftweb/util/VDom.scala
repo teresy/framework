@@ -83,13 +83,13 @@ object VDom {
   }
 
   def diff(index:Int, a:Node, b:Node):VNodePatchTree = {
-    if(getAttr(a, "data-lift-ignore-on-update-dom").isDefined || getAttr(b, "data-lift-ignore-on-update-dom").isDefined) VNodePatchTree(index, Nil, Nil)
+    if(getAttr(a, "data-lift-ignore-on-update").isDefined || getAttr(b, "data-lift-ignore-on-update").isDefined) VNodePatchTree(index, Nil, Nil)
     else {
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
 
       val matrix =
-        if(getAttr(a, "data-lift-ignore-on-update-dom").isDefined || getAttr(b, "data-lift-ignore-on-update-dom").isDefined) DiffMatrix.empty
+        if(getAttr(a, "data-lift-ignore-on-update").isDefined || getAttr(b, "data-lift-ignore-on-update").isDefined) DiffMatrix.empty
         else diffMatrix(aChildren, bChildren)
 
       val matches = matrix.matches.map {
