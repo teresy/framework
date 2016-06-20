@@ -87,10 +87,7 @@ object VDom {
     else {
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
-
-      val matrix =
-        if(getAttr(a, "data-lift-ignore-on-update").isDefined || getAttr(b, "data-lift-ignore-on-update").isDefined) DiffMatrix.empty
-        else diffMatrix(aChildren, bChildren)
+      val matrix = diffMatrix(aChildren, bChildren)
 
       val matches = matrix.matches.map {
         case(a, (b, score)) => a -> b
