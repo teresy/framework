@@ -156,15 +156,19 @@ object VDom {
     (aId.isDefined || bId.isDefined) && aId != bId
   }
 
+  def isLiftId(s:String):Boolean = s.startsWith("F") && s.length == 19
+
   def areSameInputs(a:Node, b:Node):Boolean =
     if(a.label != "input" || b.label != "input") false
     else {
       val aName = getName(a)
       val bName = getName(b)
+      val aNameIsLift = aName.map(isLiftId).getOrElse(false)
+      val bNameIsLift = bName.map(isLiftId).getOrElse(false)
       val aType = getType(a)
       val bType = getType(b)
 
-      aName == bName && aType == bType
+      (aName == bName || (aNameIsLift && bNameIsLift)) && aType == bType
     }
 
   def areDifferentInputs(a:Node, b:Node):Boolean =

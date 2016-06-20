@@ -199,6 +199,12 @@ object VDomCompareSpec extends Specification {
       compare(a, 0, b, 0) must_== 0f
     }
 
+    "regard two input elements as the same if the types are the same, but the names are different Lift-like IDs" in {
+      val a = <input type="text" name="F2650927693340F5INF"/>
+      val b = <input type="text" name="F265092769366SLETQS"/>
+      compare(a, 0, b, 0) must_== 1f
+    }
+
     "regard two identical elements as half similar if at different indices" in {
       val a = <div></div>
       compare(a, 0, a, 1) must_== 0.5f
