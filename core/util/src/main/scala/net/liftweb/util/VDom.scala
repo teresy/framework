@@ -46,7 +46,7 @@ object VDom {
     val compares = for {
       (a, i) <- aChildren.zipWithIndex
       (b, j) <- bChildren.zipWithIndex
-    } yield (compare(a, b), i, j)
+    } yield (compare(a, i, b, j), i, j)
     val sortedCompares = compares.sortBy(_._1)
 
     val aWithMatchAndScore = sortedCompares.foldLeft(Map.empty[Int, (Int, Float)]) {
@@ -181,8 +181,8 @@ object VDom {
       aName != bName || bType != aType
     }
 
-  def compare(a:Node, b:Node):Float = {
-    if (a eq b) 1f
+  def compare(a:Node, ai:Int, b:Node, bi:Int):Float = {
+    if (a eq b) if(ai == bi) 1f else 0.5f
     else if (a.label != b.label) 0f
     else if (a.label == pcdata) if (a.text == b.text) 1f else 0f
     else if (hasSameId(a, b)) 1f
@@ -203,10 +203,13 @@ object VDom {
       val numAttrs = (aAttrs.keySet ++ bAttrs.keySet).size
       val sameAttrs = aAttrs.collect { case (a, v) if bAttrs.get(a) == Some(v) => a }.size
 
-      val totalPossible = childrenLength + numAttrs
-      val total = childrenSum + sameAttrs.toFloat
+      // Compare indices
+      val indexCompare = if(ai == bi) 1.0f else 0.0f
 
-      if (totalPossible > 0) total / totalPossible else 1.0f
+      val totalPossible = childrenLength + numAttrs + 2 // 1 for index, 1 for tag matching
+      val total = childrenSum + sameAttrs.toFloat + indexCompare + 1 // 1 for tag matching
+
+      total / totalPossible
     }
   }
 
