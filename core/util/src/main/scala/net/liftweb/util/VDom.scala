@@ -193,9 +193,21 @@ object VDom {
       // Compare children
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
-      val matrix = diffMatrix(aChildren, bChildren)
-      val childrenSum = matrix.matches.foldLeft(0.0f) { case (acc, (_, (_, score))) => acc + score }
-      val childrenLength = Math.max(aChildren.length, bChildren.length)
+
+      // A single text node as a child is a special case. We want similar text to weigh more heavily than index
+      val (childrenSum, childrenLength) = (aChildren, bChildren) match {
+        case (a :: Nil, b :: Nil) if a.label == pcdata && b.label == pcdata =>
+          val sum = if(a.text == b.text) 2f else 0f
+
+          (sum, 2)
+
+        case _ =>
+          val matrix = diffMatrix(aChildren, bChildren)
+          val sum = matrix.matches.foldLeft(0.0f) { case (acc, (_, (_, score))) => acc + score }
+          val length = Math.max(aChildren.length, bChildren.length)
+
+          (sum, length)
+      }
 
       // Compare attributes
       val aAttrs = getAttrs(a)

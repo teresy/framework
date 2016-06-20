@@ -28,22 +28,22 @@ object VDomCompareSpec extends Specification {
       compare(a, 0, b, 0) must_== 1f
     }
 
-    "regard elements with the same tags and children but different indices as similar" in {
+    "regard elements with the same tags and text but different indices as similar" in {
       val a = <span>Some text</span>
       val b = <span>Some text</span>  // Purposefully making a copy for the test
-      compare(a, 0, b, 1) must_== 2f / 3f
+      compare(a, 0, b, 1) must_== 0.75f
     }
 
-    "regard elements with the same tags but different child text nodes but same positions as similar" in {
+    "regard elements with the same tags but different text but same positions as similar" in {
       val a = <span>Some text</span>
       val b = <span>Some other text</span>
-      compare(a, 0, b, 0) must_== 2f / 3f
+      compare(a, 0, b, 0) must_== 0.5f
     }
 
     "regard elements with the same tags but different child text and indices only slightly similar" in {
       val a = <span>Some text</span>
       val b = <span>Some other text</span>
-      compare(a, 0, b, 2) must_== 1f / 3f
+      compare(a, 0, b, 2) must_== 0.25f
     }
 
     "regard two Text nodes with the same text as the same" in {
@@ -76,7 +76,7 @@ object VDomCompareSpec extends Specification {
           <li>Three</li>
         </ul>
 
-      compare(a, 0, b, 0) must_== (3f + 2f / 3f) / 4f
+      compare(a, 0, b, 0) must_== 3.5f / 4f
     }
 
     "regard elements with the same tags but different number children as fairly similar" in {
@@ -104,7 +104,7 @@ object VDomCompareSpec extends Specification {
           <li>Two</li>
         </ul>
 
-      compare(a, 0, b, 0) must_== (2f + 2f / 3f) / 4f
+      compare(a, 0, b, 0) must_== 2.75f / 4f
     }
 
     "regard elements with the same tags but one with children and one without as half similar due to position and tag" in {
@@ -132,7 +132,7 @@ object VDomCompareSpec extends Specification {
           <li>Message 1</li>
         </ul>
 
-      compare(a, 0, b, 0) must_== (2f + 4f / 3f) / 4f
+      compare(a, 0, b, 0) must_== 3.5f / 4f
     }
 
     "regard elements as the same if they both have the same attributes" in {
