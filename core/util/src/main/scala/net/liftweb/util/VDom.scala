@@ -129,7 +129,7 @@ object VDom {
 
       val children = matrix.matches.toList.sortBy(_._1).collect {
         case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(bi, aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
-      }
+      }.filter(pt => !pt.children.isEmpty || !pt.patches.isEmpty) // No need to send empty trees
 
       VNodePatchTree(index, patches, children)
     }
