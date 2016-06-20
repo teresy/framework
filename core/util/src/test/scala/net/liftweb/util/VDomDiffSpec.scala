@@ -244,6 +244,15 @@ object VDomDiffSpec extends Specification {
       diff(0, before, after) must_== expected
     }
 
+    "ignore changes to id, which can happen with a form with a Lift ID" in {
+      val before = <form id="F265092769361EVWYMA"></form>
+      val after  = <form id="F265092769418MACZXI"></form>
+
+      val expected = node(0)
+
+      diff(0, before, after) must_== expected
+    }
+
     "ignore any elements marked with data-lift-ignore-on-update" in {
       val before = <div data-lift-ignore-on-update="">Some stuff</div>
       val after  = <div data-lift-ignore-on-update="" attr="blah">Different stuff</div>

@@ -117,8 +117,15 @@ object VDom {
       val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
       val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
 
-      val aAttrs = getAttrsIgnoringInputNamesWithLiftIds(a)
-      val bAttrs = getAttrsIgnoringInputNamesWithLiftIds(b)
+      def getAttrsForDiff(n:Node):Map[String, String] = {
+        val attrs = getAttrs(n) - "id" // id can change on forms when Lift puts an ID on it
+
+        if (n.label == "input" && isLiftId(attrs.get("name"))) attrs - "name"
+        else attrs
+      }
+
+      val aAttrs = getAttrsForDiff(a)
+      val bAttrs = getAttrsForDiff(b)
       val setAttrs = bAttrs.collect { case (a, v) if aAttrs.get(a) != Some(v) => VNodeAttrSet(a, v) }
       val rmAttrs  = aAttrs.collect { case (a, v) if bAttrs.get(a) == None => VNodeAttrRm(a) }
 
@@ -141,12 +148,6 @@ object VDom {
   private [this] def getId(n:Node) = getAttr(n, "id")
   private [this] def getName(n:Node) = getAttr(n, "name")
   private [this] def getType(n:Node) = getAttr(n, "type")
-  private [this] def getAttrsIgnoringInputNamesWithLiftIds(n:Node):Map[String, String] = {
-    val attrs = getAttrs(n)
-
-    if (n.label == "input" && isLiftId(attrs.get("name"))) attrs - "name"
-    else attrs
-  }
 
   // TODO: Do this for all Lift IDs, not just forms?
   def areFormsWithLiftIds(a:Node, b:Node):Boolean =
