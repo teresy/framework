@@ -136,8 +136,8 @@ object VDomCompareSpec extends Specification {
     }
 
     "regard elements as the same if they both have the same attributes" in {
-      val a = <input type="text" name="in"/>
-      val b = <input type="text" name="in"/>
+      val a = <div class="text" style="font-style:italic;"/>
+      val b = <div class="text" style="font-style:italic;"/>
 
       compare(a, 0, b, 0) must_== 1.0f
     }
