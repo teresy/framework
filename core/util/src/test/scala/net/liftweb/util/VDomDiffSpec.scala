@@ -235,7 +235,16 @@ object VDomDiffSpec extends Specification {
       diff(0, before, after) must_== expected
     }
 
-    "should ignore any elements marked with data-lift-ignore-on-update" in {
+    "ignore input elements which change Lift ID values as the name" in {
+      val before = <input value="" id="chat-in" type="text" name="F273668743084VX1Y2H"/>
+      val after  = <input value="" id="chat-in" type="text" name="F2736687431140WJQZB"/>
+
+      val expected = node(0)
+
+      diff(0, before, after) must_== expected
+    }
+
+    "ignore any elements marked with data-lift-ignore-on-update" in {
       val before = <div data-lift-ignore-on-update="">Some stuff</div>
       val after  = <div data-lift-ignore-on-update="" attr="blah">Different stuff</div>
 
