@@ -319,7 +319,12 @@ object VDom {
     }
 
     def insertNode(root:Node, newChild:Node, atIndex:Int, after:Boolean):Node = {
-      def siblingsAfterFound(child:Node, siblingsAfter:List[Node]):List[Node] = child :: newChild :: siblingsAfter
+      def siblingsAfterFound(child:Node, siblingsAfter:List[Node]):List[Node] = {
+        // Inserting text into a <ul> blows up property tests, and I can't reproduce it with unit test.
+        // This is a workaround to avoid what appears to be a non-issue. Note that an empty <li></li> also misbehaves.
+        val toInsert = if(child.label == "li" && newChild.label == pcdata) <li>{newChild}</li> else newChild
+        child :: toInsert :: siblingsAfter
+      }
       traverseUpdate(root, atIndex, siblingsAfterFound)
     }
 

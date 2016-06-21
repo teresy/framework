@@ -41,7 +41,7 @@ object VDomGen {
 
   def genNode:Gen[Node] = for {
     tag <- oneOf("p", "br", "hr", pcdata)
-    str <- alphaStr
+    str <- alphaStr if str.length > 1 // Part of the workaround explained in VDomHelper.insertNode
   } yield {
     if(tag == pcdata) Text(str)
     else <xml></xml>.copy(label = tag)
