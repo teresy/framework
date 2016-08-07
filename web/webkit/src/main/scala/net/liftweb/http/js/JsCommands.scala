@@ -575,7 +575,7 @@ trait HtmlFixer {
   def fixHtmlFunc(uid: String, content: NodeSeq)(f: String => String) =
     fixHtmlAndJs(uid, content) match {
       case (str, Nil) => f(str)
-      case (str, cmds) => "((function() {"+cmds.reduceLeft{_ & _}.toJsCmd+" return "+f(str)+";})())"
+      case (str, cmds) => "((function() {setTimeout(function() { "+cmds.reduceLeft{_ & _}.toJsCmd+" }); return "+f(str)+";})())"
     }
 
   /**
