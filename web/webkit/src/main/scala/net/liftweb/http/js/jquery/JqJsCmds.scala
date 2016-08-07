@@ -239,7 +239,7 @@ object JqJE {
    * See http://api.jquery.com/append/ .
    */
   case class JqAppend(content: NodeSeq) extends JsExp with JsMember {
-    override val toJsCmd = fixHtmlCmdFunc("inline", content){"append(" + _ + ")"}
+    override val toJsCmd = fixHtmlFunc("inline", content){"append(" + _ + ")"}
   }
 
   /**
@@ -262,7 +262,7 @@ object JqJE {
    * See http://api.jquery.com/appendTo/ .
    */
   case class JqAppendTo(content: NodeSeq) extends JsExp with JsMember {
-    override val toJsCmd = fixHtmlCmdFunc("inline", content){"appendTo(" + _ + ")"}
+    override val toJsCmd = fixHtmlFunc("inline", content){"appendTo(" + _ + ")"}
   }
 
   /**
@@ -273,7 +273,7 @@ object JqJE {
    * See http://api.jquery.com/prepend/ .
    */
   case class JqPrepend(content: NodeSeq) extends JsExp with JsMember {
-    override val toJsCmd = fixHtmlCmdFunc("inline", content){"prepend(" + _ + ")"}
+    override val toJsCmd = fixHtmlFunc("inline", content){"prepend(" + _ + ")"}
   }
 
   /**
@@ -284,7 +284,7 @@ object JqJE {
    * See http://api.jquery.com/prependTo/ .
    */
   case class JqPrependTo(content: NodeSeq) extends JsExp with JsMember {
-    override val toJsCmd = fixHtmlCmdFunc("inline", content){"prependTo(" + _ + ")"}
+    override val toJsCmd = fixHtmlFunc("inline", content){"prependTo(" + _ + ")"}
   }
 
   /**
@@ -308,7 +308,7 @@ object JqJE {
    * See http://api.jquery.com/empty/ and http://api.jquery.com/after/ .
    */
   case class JqEmptyAfter(content: NodeSeq) extends JsExp with JsMember {
-    override val toJsCmd = fixHtmlCmdFunc("inline", content){"empty().after(" + _ + ")"}
+    override val toJsCmd = fixHtmlFunc("inline", content){"empty().after(" + _ + ")"}
   }
 
   /**
