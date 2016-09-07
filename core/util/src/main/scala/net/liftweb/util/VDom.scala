@@ -93,27 +93,37 @@ object VDom {
         case(a, (b, score)) => a -> b
       }
 
-      val matchesAdjustedForAdditions:Map[Int, Int] = matrix.notInA.foldLeft(matches) {
+      val matchesAdjustedForSubtractions:Map[Int, Int] = matrix.notInB.foldLeft(matches) {
         case (acc, i) => acc.map {
-          case (j, k) => if (i > j) (j, k) else (j + 1, k)
+          case (j, k) => if (i > j) (j, k) else (j - 1, k)
         }
       }
-      val matchesAdjusted:Map[Int, Int] = matrix.notInB.foldLeft(matchesAdjustedForAdditions) {
+      val matchesAdjusted:Map[Int, Int] = matrix.notInA.foldLeft(matchesAdjustedForSubtractions) {
         case (acc, i) => acc.map {
           case (j, k) => if (i > j) (j, k) else (j - 1, k)
         }
       }
 
-      val cycles = matchesAdjusted.foldRight(List(List.empty[Int])) { (z, maps:List[List[Int]]) =>
-        val cycleList:List[List[Int]] = if (z._1 == z._2) maps
-        else List((List(z._1, z._2):::maps.head).distinct)
-        cycleList
+      val cycles = matchesAdjusted
+        .filterNot(z => z._1 == z._2)
+        .foldRight(List(List.empty[Int]), List(List.empty[Int])) { (z, maps:(List[List[Int]], List[List[Int]])) =>
+        val cyclelist = if(maps._1.map(_.sorted) contains List(z._1, z._2).sorted) {
+            (maps._1.dropWhile(_==List(z._2,z._1)), maps._2 ++ maps._1.filter(_==List(z._2,z._1)))
+          }
+          else (List(List(z._1, z._2)) ++ maps._1,maps._2)
+        cyclelist
       }
 
-      val reorders = if (cycles == Nil) Nil else cycles.collect {
-        case r if r.length==2 => VNodeReorder(r.reverse)
-        case r => VNodeReorder(r)
-      }
+      val reorders = if (cycles._1 == Nil && cycles._2 == Nil) Nil
+      else List(VNodeReorder(cycles._1.flatten.distinct)) ++ cycles._2.collect {
+        case r if r.length==2 =>
+          val diff = (r(0) - r(1)).abs
+          if(diff > 1) {
+            List(List(VNodeReorder(r)), (for (x <- 2 to diff) yield VNodeReorder(List(r(1) + x, r(1) + (x-1)))).toList).flatten
+          }
+          else List(VNodeReorder(r))
+      }.flatten
+
       val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
       val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
 

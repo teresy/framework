@@ -294,6 +294,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
             <ul>
               <li>Message 1</li>
               <li>Message 2</li>
+              <li>Message 3</li>
             </ul>
           </div>
         </body>
@@ -303,7 +304,92 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
           <div>
             <hr/>
             <ul>
+              <li>Message 1</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "add an element before and remove an element" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
               <li>Message 2</li>
+              <li>Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 4</li>
+              <li>Message 1</li>
+              <li>Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "add two elements and remove two elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+
+    "add two elements before and remove two elements" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 4</li>
+              <li>Message 5</li>
               <li>Message 3</li>
             </ul>
           </div>
@@ -445,7 +531,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
-    }.pendingUntilFixed
+    }
 
     "find added and swapped elements" in {
       val before =
