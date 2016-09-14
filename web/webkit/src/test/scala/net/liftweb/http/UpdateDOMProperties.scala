@@ -93,7 +93,7 @@ object UpdateDOMProperties extends Properties("UpdateDOM") {
     isntWhitespace)
 
   property("UpdateDOM should handle an arbitrary mutation of our static template") = forAll(
-    VDomGen.genMutation(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16), List(1, 11))
+    VDomGen.genMutations(template, List(2, 3, 4, 5, 10, 11, 12, 13, 14, 15, 16), List(1, 11))
   ) { after =>
     UpdateDOMSpec.roundTrip(template, after) == after
   }
