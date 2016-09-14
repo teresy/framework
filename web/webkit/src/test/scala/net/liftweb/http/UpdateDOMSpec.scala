@@ -1,18 +1,18 @@
 package net.liftweb.http
 
-import java.io.{FileWriter, File}
+import java.io.{File, FileWriter}
 
 import com.gargoylesoftware.htmlunit.BrowserVersion._
 import com.gargoylesoftware.htmlunit.WebClient
 import net.liftweb.http.js.JE
 import net.liftweb.json.Extraction
 import net.liftweb.util.VDom.VDomHelpers
-import net.liftweb.util.{VDom, Html5}
+import net.liftweb.util.{Html5, VDom}
 import org.specs2.matcher.XmlMatchers
 import org.specs2.mutable.Specification
-
-import net.sourceforge.htmlunit.corejs.javascript. { ScriptableObject, Function => JsFunction }
-import com.gargoylesoftware.htmlunit.html.{DomNode, DomElement, HtmlElement, HtmlPage}
+import net.sourceforge.htmlunit.corejs.javascript.{ScriptableObject, Function => JsFunction}
+import com.gargoylesoftware.htmlunit.html.{DomElement, DomNode, HtmlElement, HtmlPage}
+import net.liftweb.util.VDom.VDomHelpers._
 
 import scala.xml._
 import scala.collection.JavaConverters._
@@ -733,6 +733,33 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       rtAndCompare(before, after)
     }
 
-  }
+    "add text only nodes" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <h2>Welcome to chat</h2>
+            <span>Say something!</span>
+            <ul>
+              <li class="chat-message">Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
 
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <h2>Welcome to chat</h2>
+            TEXT
+            <span>Say something!</span>
+            <ul>
+              <li class="chat-message">Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
+  }
 }
