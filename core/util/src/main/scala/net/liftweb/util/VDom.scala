@@ -100,7 +100,7 @@ object VDom {
       }
       val matchesAdjusted:Map[Int, Int] = matrix.notInA.foldLeft(matchesAdjustedForSubtractions) {
         case (acc, i) => acc.map {
-          case (j, k) => if (i > j) (j, k) else (j - 1, k)
+          case (j, k) => if (i > j) (j, k) else (j - (j-k), k)
         }
       }
 
