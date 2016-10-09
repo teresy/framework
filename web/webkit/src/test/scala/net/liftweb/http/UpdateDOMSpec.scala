@@ -761,5 +761,35 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
 
       rtAndCompare(before, after)
     }
+
+    "handle children which occur after adding a text node" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <h2>Welcome to chat</h2>
+            <span>Say something!</span>
+            <ul>
+              <li class="chat-message">Message 1</li>
+              <li>Message 2</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <h2>Welcome to chat</h2>
+            TEXT
+            <span>Say something!</span>
+            <ul>
+              <li class="chat-message">Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }
   }
 }
