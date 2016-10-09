@@ -231,7 +231,7 @@ object VDomDiffSpec extends Specification {
           node(0).withPatches(VNodeInsert(1, VNode("li", Map(), List(txt("Message 2")))))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find attributes which have been changed" in {
