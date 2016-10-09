@@ -82,7 +82,7 @@ object VDom {
     DiffMatrix(matches, notInA, notInB)
   }
 
-  def diff(index:Int, a:Node, b:Node):VNodePatchTree = {
+  def diff(index:Int, a:Node, b:Node, prevIndexList:List[Int]):VNodePatchTree = {
     if(getAttr(a, "data-lift-ignore-on-update").isDefined || getAttr(b, "data-lift-ignore-on-update").isDefined) VNodePatchTree(index, Nil, Nil)
     else {
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
@@ -124,7 +124,15 @@ object VDom {
           else List(VNodeReorder(r))
       }.flatten
 
-      val additions = matrix.notInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }
+      val actualNotInA = matrix.notInA.map {
+        case i if (for ((k,v) <- matches if v==i) yield false).headOption.getOrElse(true) => i
+        case _ => -1
+      }
+      var num = 0
+      val additions = actualNotInA.filterNot(_ == -1).map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }.collect {
+        case VNodeInsert(i,n) if n.tag == "#text" => num = num + 1; VNodeInsert(i-num+1,n)
+        case VNodeInsert(i,n) => VNodeInsert(i-num,n)
+      }
       val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
 
       def getAttrsForDiff(n:Node):Map[String, String] = {
@@ -141,8 +149,29 @@ object VDom {
 
       val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List())) ++ setAttrs ++ rmAttrs
 
+      val textOnly = additions.filterNot(_.node.tag == "#text")
+      val inserts = additions.length - removals.length
+      val inserts2 = textOnly.length - removals.length
+      val insertsList = additions.collect{ case VNodeInsert(i,n) => i }
+      val indexList = prevIndexList ++ List(index)
+
       val children = matrix.matches.toList.sortBy(_._1).collect {
-        case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => diff(bi, aChildren(ai), bChildren(bi)) // The != is necessary for the case where equal ids made the match == 1.0f
+        case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) =>
+          diff(
+            if (inserts > 0 && inserts == inserts2) {
+              if (bi - inserts >= index) bi
+              else if (bi - inserts >= 0 ) bi - inserts
+              else bi
+            }
+            else if (inserts > 0 && inserts > inserts2) {
+              val insertsBeforeBi = insertsList.collect{ case i if i<bi => i }.length
+              if (bi - inserts >= 0 && insertsBeforeBi > 0) {
+                bi - inserts
+              }
+              else bi
+            }
+            else bi,
+          aChildren(ai), bChildren(bi), indexList) // The != is necessary for the case where equal ids made the match == 1.0f
       }.filter(pt => !pt.children.isEmpty || !pt.patches.isEmpty) // No need to send empty trees
 
       VNodePatchTree(index, patches, children)

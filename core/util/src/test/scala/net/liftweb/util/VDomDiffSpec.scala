@@ -37,7 +37,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeInsert(2, VNode("li", Map(), List(txt("Message 3")))))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find an inserted element" in {
@@ -65,7 +65,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeInsert(1, VNode("li", Map(), List(txt("Message 3")))))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find a removed element" in {
@@ -91,7 +91,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeDelete(0))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find a removed element identical to a sibling" in {
@@ -119,7 +119,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeDelete(2))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find reordered elements" in {
@@ -150,7 +150,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeReorder(List(0, 3, 1)))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find more reordered elements" in {
@@ -177,7 +177,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeReorder(List(1, 0)))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find added and reordered elements" in {
@@ -205,7 +205,7 @@ object VDomDiffSpec extends Specification {
           node(1).withPatches(VNodeInsert(2, VNode("li", Map(), List(txt("Message 3")))), VNodeReorder(List(1, 0)))
         )
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find attributes which have been changed" in {
@@ -214,7 +214,7 @@ object VDomDiffSpec extends Specification {
 
       val expected = node(0).withPatches(VNodeAttrSet("class", "italics"))
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find attributes which have been added" in {
@@ -223,7 +223,7 @@ object VDomDiffSpec extends Specification {
 
       val expected = node(0).withPatches(VNodeAttrSet("class", "italics"))
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "find attributes which have been removed" in {
@@ -232,7 +232,7 @@ object VDomDiffSpec extends Specification {
 
       val expected = node(0).withPatches(VNodeAttrRm("class"))
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "ignore input elements which change Lift ID values as the name" in {
@@ -241,7 +241,7 @@ object VDomDiffSpec extends Specification {
 
       val expected = node(0)
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "ignore changes to id, which can happen with a form with a Lift ID" in {
@@ -250,7 +250,7 @@ object VDomDiffSpec extends Specification {
 
       val expected = node(0)
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
     "ignore any elements marked with data-lift-ignore-on-update" in {
@@ -259,7 +259,7 @@ object VDomDiffSpec extends Specification {
 
       val expected = node(0)
 
-      diff(0, before, after) must_== expected
+      diff(0, before, after, List()) must_== expected
     }
 
   }
