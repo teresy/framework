@@ -208,6 +208,32 @@ object VDomDiffSpec extends Specification {
       diff(0, before, after) must_== expected
     }
 
+    "compensate for a text node's lack of presence in the children array" in {
+      val before =
+        <div>
+          TEXT
+          <ul>
+            <li>Message 1</li>
+          </ul>
+        </div>
+
+      val after =
+        <div>
+          TEXT
+          <ul>
+            <li>Message 1</li>
+            <li>Message 2</li>
+          </ul>
+        </div>
+
+      val expected =
+        node(0,
+          node(0).withPatches(VNodeInsert(1, VNode("li", Map(), List(txt("Message 2")))))
+        )
+
+      diff(0, before, after) must_== expected
+    }
+
     "find attributes which have been changed" in {
       val before = <div class="bold"></div>
       val after  = <div class="italics"></div>
