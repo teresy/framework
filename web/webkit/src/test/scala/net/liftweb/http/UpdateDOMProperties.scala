@@ -12,7 +12,7 @@ object VDomGen {
   import org.scalacheck.Gen._
 
   def genMutations(n:Node, removable:List[Int], hasSwappableChildren:List[Int]) = for {
-    numMutations <- choose(1, 5)
+    numMutations <- choose(1, 2)
     mutated <- (1 to numMutations).foldLeft(const(n)) {
       case (gNode, _) => gNode.flatMap(n => genMutation(n, removable, hasSwappableChildren))
     }
