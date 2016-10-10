@@ -2811,7 +2811,7 @@ class LiftSession(private[http] val _contextPath: String, val underlyingId: Stri
           nextBody <- (next \\ "body").headOption
         } yield {
           lastRender.set(Full(next))
-          val diffObj = VDom.diff(0, lastBody, nextBody, List())
+          val diffObj = VDom.diff(0, lastBody, nextBody)
 
           JE.Call("lift.updateBody", Extraction.decompose(diffObj)):JsCmd
         }

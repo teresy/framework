@@ -82,9 +82,11 @@ object VDom {
     DiffMatrix(matches, notInA, notInB)
   }
 
-  def diff(index:Int, a:Node, b:Node, prevIndexList:List[Int]):VNodePatchTree = {
+  def diff(index:Int, a:Node, b:Node):VNodePatchTree = {
     if(getAttr(a, "data-lift-ignore-on-update").isDefined || getAttr(b, "data-lift-ignore-on-update").isDefined) VNodePatchTree(index, Nil, Nil)
     else {
+      // TODO: Pull pieces of this long function out into small private functions
+
       val aChildren = a.nonEmptyChildren.filter(isntWhitespace).toList
       val bChildren = b.nonEmptyChildren.filter(isntWhitespace).toList
       val matrix = diffMatrix(aChildren, bChildren)
@@ -93,49 +95,63 @@ object VDom {
         case(a, (b, score)) => a -> b
       }
 
-      val matchesAdjustedForSubtractions:Map[Int, Int] = matrix.notInB.foldLeft(matches) {
-        case (acc, i) => acc.map {
-          case (j, k) => if (i > j) (j, k) else (j - 1, k)
-        }
-      }
-      val matchesAdjusted:Map[Int, Int] = matrix.notInA.foldLeft(matchesAdjustedForSubtractions) {
-        case (acc, i) => acc.map {
-          case (j, k) => if (i > j) (j, k) else (j - (j-k), k)
-        }
-      }
-
-      val cycles = matchesAdjusted
-        .filterNot(z => z._1 == z._2)
-        .foldRight(List(List.empty[Int]), List(List.empty[Int])) { (z, maps:(List[List[Int]], List[List[Int]])) =>
-        val cyclelist = if(maps._1.map(_.sorted) contains List(z._1, z._2).sorted) {
-            (maps._1.dropWhile(_==List(z._2,z._1)), maps._2 ++ maps._1.filter(_==List(z._2,z._1)))
+      val reorders: List[VNodeReorder] = {
+        val matchesAdjustedForSubtractions:Map[Int, Int] = matrix.notInB.foldLeft(matches) {
+          case (acc, i) => acc.map {
+            case (j, k) => if (i > j) (j, k) else (j - 1, k)
           }
-          else (List(List(z._1, z._2)) ++ maps._1,maps._2)
-        cyclelist
-      }
+        }
 
-      val reorders = if (cycles._1 == Nil && cycles._2 == Nil) Nil
-      else List(VNodeReorder(cycles._1.flatten.distinct)) ++ cycles._2.collect {
-        case r if r.length==2 =>
-          val diff = (r(0) - r(1)).abs
-          if(diff > 1) {
-            List(List(VNodeReorder(r)), (for (x <- 2 to diff) yield VNodeReorder(List(r(1) + x, r(1) + (x-1)))).toList).flatten
+        // TODO: Can this be done in the foldLeft above?
+        val matchesAdjusted:Map[Int, Int] = matrix.notInA.foldLeft(matchesAdjustedForSubtractions) {
+          case (acc, i) => acc.map {
+            case (j, k) => if (i > j) (j, k) else (j - (j-k), k)
           }
-          else List(VNodeReorder(r))
-      }.flatten
+        }.filterNot(z => z._1 == z._2)
 
-      val actualNotInA = matrix.notInA.map {
-        case i if (for ((k,v) <- matches if v==i) yield false).headOption.getOrElse(true) => i
-        case _ => -1
+        // TODO: Generalize :P
+        val (nonBinaryCyclesDirty, binaryCyclesDirty): (List[List[Int]], List[(Int, Int)]) = matchesAdjusted
+          .foldRight(List.empty[List[Int]], List.empty[(Int, Int)]) {
+            case ((ai: Int, bi: Int), (nonBinaryCycles: List[List[Int]], binaryCycles:List[(Int, Int)])) =>
+              val cycleList = if(nonBinaryCycles.map(_.toSet) contains Set(ai, bi)) {
+                (nonBinaryCycles.dropWhile(_ == List(bi, ai)), binaryCycles :+ (bi, ai))
+              }
+              else (List(List(ai, bi)) ++ nonBinaryCycles, binaryCycles)
+              cycleList
+          }
+
+        // TODO: This suggests to me that we only support at most one cycle of length > 2
+        val nonBinaryCycles : List[Int] = nonBinaryCyclesDirty.flatten.distinct
+        val binaryCycles: List[List[Int]] = binaryCyclesDirty.map {
+          case (first, second) =>
+            val diff = (first - second).abs
+            if (diff > 1) {
+              val thing = for (x <- 2 to diff) yield List(second + x, second + (x - 1))
+              List(first, second) +: thing
+            }
+            else List(List(first, second))
+        }.flatten
+
+        val cycles = if(nonBinaryCycles.isEmpty) binaryCycles else nonBinaryCycles +: binaryCycles
+
+        cycles.map(VNodeReorder.apply)
       }
+
+      // TODO: Fix the diff matrix to handle whatever is happening in property test 8
+      val actualNotInA: List[Int] = matrix.notInA.filterNot {
+        i => matches.values.toList.contains(i)
+      }
+
+      // TODO: Eliminate var.
       var num = 0
-      val additions = actualNotInA.filterNot(_ == -1).map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }.collect {
-        case VNodeInsert(i,n) if n.tag == "#text" => num = num + 1; VNodeInsert(i-num+1,n)
-        case VNodeInsert(i,n) => VNodeInsert(i-num,n)
+      val additions: List[VNodeInsert] = actualNotInA.map { i => VNodeInsert(i, VNode.fromXml(bChildren(i))) }.map {
+        // Compensate for #text nodes' lack of presence in the children array in the browser
+        case VNodeInsert(i, n) if n.tag == "#text" => num = num + 1; VNodeInsert(i - num + 1, n)
+        case VNodeInsert(i, n) => VNodeInsert(i - num, n)
       }
-      val removals  = matrix.notInB.map { i => VNodeDelete(i) }.reverse
+      val removals: List[VNodeDelete] = matrix.notInB.map { i => VNodeDelete(i) }.reverse
 
-      def getAttrsForDiff(n:Node):Map[String, String] = {
+      def getAttrsForDiff(n:Node): Map[String, String] = {
         val attrs = getAttrs(n) - "id" // id can change on forms when Lift puts an ID on it
 
         if (n.label == "input" && isLiftId(attrs.get("name"))) attrs - "name"
@@ -147,31 +163,32 @@ object VDom {
       val setAttrs = bAttrs.collect { case (a, v) if aAttrs.get(a) != Some(v) => VNodeAttrSet(a, v) }
       val rmAttrs  = aAttrs.collect { case (a, v) if bAttrs.get(a) == None => VNodeAttrRm(a) }
 
-      val patches = removals ++ additions ++ reorders.filterNot(_==VNodeReorder(List())) ++ setAttrs ++ rmAttrs
+      val patches = removals ++ additions ++ reorders ++ setAttrs ++ rmAttrs
 
-      val textOnly = additions.filterNot(_.node.tag == "#text")
-      val inserts = additions.length - removals.length
-      val inserts2 = textOnly.length - removals.length
-      val insertsList = additions.collect{ case VNodeInsert(i,n) => i }
-      val indexList = prevIndexList ++ List(index)
+      val nonTexts = additions.filterNot(_.node.tag == "#text")
+      val numInserts = additions.length - removals.length
+      val numNonTextInserts = nonTexts.length - removals.length
+      val insertIndeces = additions.map(_.index)
 
       val children = matrix.matches.toList.sortBy(_._1).collect {
-        case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) =>
-          diff(
-            if (inserts > 0 && inserts == inserts2) {
-              if (bi - inserts >= index) bi
-              else if (bi - inserts >= 0 ) bi - inserts
+        case (ai, (bi, score)) if score < 1.0f || aChildren(ai) != bChildren(bi) => // The != is necessary for the case where equal ids made the match == 1.0f
+          // TODO: Seems we are handling the fact that #text nodes are not in the children collection here too
+          val nextIndex =
+            if (numInserts > 0 && numInserts == numNonTextInserts) {
+              if (bi - numInserts >= index) bi
+              else if (bi - numInserts >= 0 ) bi - numInserts
               else bi
             }
-            else if (inserts > 0 && inserts > inserts2) {
-              val insertsBeforeBi = insertsList.collect{ case i if i<bi => i }.length
-              if (bi - inserts >= 0 && insertsBeforeBi > 0) {
-                bi - inserts
+            else if (numInserts > 0 && numInserts > numNonTextInserts) {
+              val numInsertsBeforeBi = insertIndeces.filter(_ < bi).length
+              if (bi - numInserts >= 0 && numInsertsBeforeBi > 0) {
+                bi - numInserts
               }
               else bi
             }
-            else bi,
-          aChildren(ai), bChildren(bi), indexList) // The != is necessary for the case where equal ids made the match == 1.0f
+            else bi
+
+          diff(nextIndex, aChildren(ai), bChildren(bi))
       }.filter(pt => !pt.children.isEmpty || !pt.patches.isEmpty) // No need to send empty trees
 
       VNodePatchTree(index, patches, children)

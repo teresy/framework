@@ -54,7 +54,7 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       else Elem(null, e.getNodeName, attrs, TopScope, true, children:_*)
     }
 
-    val diff = VDom.diff(0, before, after, List())
+    val diff = VDom.diff(0, before, after)
     val js = JE.Call("lift.updateBody", Extraction.decompose(diff)).toJsCmd
 
     val file = File.createTempFile("test", "html")
