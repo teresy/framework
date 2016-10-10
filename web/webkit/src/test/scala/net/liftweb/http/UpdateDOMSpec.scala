@@ -475,6 +475,40 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
       rtAndCompare(before, after)
     }
 
+    "find two cycles of reordered elements where the cycles lengths are > 2" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 1</li>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 4</li>
+              <li>Message 5</li>
+              <li>Message 6</li>
+            </ul>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            <hr/>
+            <ul>
+              <li>Message 2</li>
+              <li>Message 3</li>
+              <li>Message 1</li>
+              <li>Message 5</li>
+              <li>Message 6</li>
+              <li>Message 4</li>
+            </ul>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
+    }.pendingUntilFixed
+
     "find one pair of swapped elements" in {
       val before =
         <body data-lift-content-id="main">

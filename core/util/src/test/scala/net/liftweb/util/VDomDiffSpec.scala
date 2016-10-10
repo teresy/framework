@@ -153,7 +153,7 @@ object VDomDiffSpec extends Specification {
       diff(0, before, after) must_== expected
     }
 
-    "find more reordered elements" in {
+    "find swapped elements" in {
       val before =
         <div>
           <hr/>
@@ -179,6 +179,41 @@ object VDomDiffSpec extends Specification {
 
       diff(0, before, after) must_== expected
     }
+
+    "find two cycles of length > 2" in {
+      val before =
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 1</li>
+            <li>Message 2</li>
+            <li>Message 3</li>
+            <li>Message 4</li>
+            <li>Message 5</li>
+            <li>Message 6</li>
+          </ul>
+        </div>
+
+      val after =
+        <div>
+          <hr/>
+          <ul>
+            <li>Message 2</li>
+            <li>Message 3</li>
+            <li>Message 1</li>
+            <li>Message 5</li>
+            <li>Message 6</li>
+            <li>Message 4</li>
+          </ul>
+        </div>
+
+      val expected =
+        node(0,
+          node(1).withPatches(VNodeReorder(List(0, 2, 1)), VNodeReorder(List(3, 5, 4)))
+        )
+
+      diff(0, before, after) must_== expected
+    }.pendingUntilFixed
 
     "find added and reordered elements" in {
       val before =
