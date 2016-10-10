@@ -785,6 +785,26 @@ object UpdateDOMSpec extends Specification with XmlMatchers {
         </body>
 
       rtAndCompare(before, after)
+    }.pendingUntilFixed
+
+    "insert children which occur after an inserted text node" in {
+      val before =
+        <body data-lift-content-id="main">
+          <div>
+            <span></span>
+          </div>
+        </body>
+
+      val after =
+        <body data-lift-content-id="main">
+          <div>
+            TEXT
+            <hr></hr>
+            <span></span>
+          </div>
+        </body>
+
+      rtAndCompare(before, after)
     }
   }
 }

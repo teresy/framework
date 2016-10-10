@@ -409,54 +409,6 @@ object UpdateDOMGeneratedCases extends Specification with XmlMatchers {
       rtAndCompare(before, after)
     }
 
-    "prop test failed 10" in {
-      val before =
-        <body data-lift-content-id="main">
-          <div id="main" data-lift="surround?with=default;at=content">
-            <h2>Welcome to chat</h2>
-            <span>Say something!</span>
-            <form method="post" data-lift="form.ajax">
-              <div data-lift="Chat.submit">
-                <input type="text" id="chat-in" name="in"/>
-                <input type="submit" value="Submit"/>
-              </div>
-            </form>
-            <div>
-              <ul data-lift="Chat.messages">
-                <li class="chat-message">Message 1</li>
-                <li class="chat-message clearable">Message 2</li>
-                <li class="chat-message clearable">Message 3</li>
-              </ul>
-            </div>
-          </div>
-        </body>
-
-      val after =
-        <body data-lift-content-id="main">
-          <div id="main" data-lift="surround?with=default;at=content">
-            <h2>Welcome to chat</h2>
-            <span>Say something!</span>
-            <form method="post" data-lift="form.ajax">
-              <div data-lift="Chat.submit">
-                <input type="text" id="chat-in" name="in"/>
-                <input type="submit" value="Submit"/>
-              </div>
-            </form>
-            LorjnHpvakindyfhx
-            <hr></hr>
-            <div>
-              <ul data-lift="Chat.messages">
-                <li class="chat-message">Message 1</li>
-                <li class="chat-message clearable">Message 2</li>
-                <li class="chat-message clearable">Message 3</li>
-              </ul>
-            </div>
-          </div>
-        </body>
-
-      rtAndCompare(before, after)
-    }
-
     "prop test failed 11" in {
       val before =
         <body data-lift-content-id="main">
