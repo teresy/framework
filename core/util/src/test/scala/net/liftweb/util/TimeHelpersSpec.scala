@@ -28,12 +28,11 @@ import org.specs2.ScalaCheck
 import org.specs2.execute.AsResult
 import org.specs2.matcher.MatchersImplicits
 import org.specs2.mutable.{Around, Specification}
-import org.specs2.time.NoTimeConversions
 
 /**
  * Systems under specification for TimeHelpers.
  */
-object TimeHelpersSpec extends Specification with ScalaCheck with TimeAmountsGen with NoTimeConversions {
+object TimeHelpersSpec extends Specification with ScalaCheck with TimeAmountsGen {
   "TimeHelpers Specification".title
 
   "A TimeSpan" can {
@@ -54,18 +53,6 @@ object TimeHelpersSpec extends Specification with ScalaCheck with TimeAmountsGen
     }
     "be created from a number of weeks" in forAllTimeZones {
       3.weeks must_== TimeSpan(3 * 7 * 24 * 60 * 60 * 1000)
-    }
-    "be created from a number of months" in forAllTimeZones {
-      3.months must_== Period.months(3)
-    }
-    "be created from a number of years" in forAllTimeZones {
-      3.years must_== Period.years(3)
-    }
-    "be converted implicitly to a date starting from the epoch time" in forAllTimeZones {
-      3.seconds.after(new Date(0)) must beTrue
-    }
-    "be converted to a date starting from the epoch time, using the date method" in forAllTimeZones {
-      3.seconds.after(new Date(0)) must beTrue
     }
     "be implicitly converted to a Long" in forAllTimeZones {
       (3.seconds == 3000L) must_== true
@@ -93,16 +80,6 @@ object TimeHelpersSpec extends Specification with ScalaCheck with TimeAmountsGen
     }
     "return a new TimeSpan representing the difference of the 2 times when substracted with another TimeSpan" in forAllTimeZones {
       3.seconds - 4.seconds must_== (-1).seconds
-    }
-    "have a later method returning a date relative to now plus the time span" in forAllTimeZones {
-      val expectedTime = new Date().getTime + 3.seconds.millis
-
-      3.seconds.later.getMillis must beCloseTo(expectedTime, 1000L)
-    }
-    "have an ago method returning a date relative to now minus the time span" in forAllTimeZones {
-      val expectedTime = new Date().getTime - 3.seconds.millis
-
-      3.seconds.ago.getMillis must beCloseTo(expectedTime, 1000L)
     }
     "have a toString method returning the relevant number of weeks, days, hours, minutes, seconds, millis" in forAllTimeZones {
       val conversionIsOk = forAll(timeAmounts)((t: TimeAmounts) => { val (timeSpanToString, timeSpanAmounts) = t
@@ -142,8 +119,10 @@ object TimeHelpersSpec extends Specification with ScalaCheck with TimeAmountsGen
     }
 
     "make sure noTime does not change the day" in forAllTimeZones {
-      dateFormatter.format(0.days.ago.noTime.toDate) must_== dateFormatter.format(new DateTime().toDate)
-      dateFormatter.format(3.days.ago.noTime.toDate) must_== dateFormatter.format(new Date(millis - (3 * 24 * 60 * 60 * 1000)))
+      dateFormatter.format(new Period(0).ago.noTime.toDate) must_==
+        dateFormatter.format(new DateTime().toDate)
+      dateFormatter.format(new Period(3 * 24, 0, 0, 0).ago.noTime.toDate) must_==
+        dateFormatter.format(new Period(3 * 24, 0, 0, 0).ago.toDate)
     }
 
     "provide a day function returning the day of month corresponding to a given date (relative to UTC)" in forAllTimeZones {
