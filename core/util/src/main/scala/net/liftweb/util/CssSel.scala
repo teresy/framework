@@ -455,10 +455,10 @@ private class SelectorMap(binds: List[CssBind]) extends Function1[NodeSeq, NodeS
     final def forStar(buff: ListBuffer[CssBind], depth: Int) {
       for {
         binds <- starFunc
-        bind <- binds if (bind match {
+        bind <- binds if bind match {
         case CssBind(StarSelector(_, topOnly)) => !topOnly || (depth == 0)
         case _ => true
-      })
+      }
       } buff += bind
     }
 
